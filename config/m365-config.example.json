@@ -1,0 +1,28 @@
+{
+  "TenantId": "your-azure-tenant-id-here",
+  "ClientId": "your-app-registration-client-id-here",
+  "ClientSecret": "your-client-secret-here",
+  "CertificateThumbprint": "",
+  "TenantDomain": "your-organization.onmicrosoft.com",
+  "CloudScopeAPI": "http://localhost:8000",
+  "ApiToken": "demo-token",
+  "CollectionSettings": {
+    "DetailedCollection": false,
+    "AssetTypes": ["Users", "Groups", "Applications", "Devices"],
+    "BatchSize": 1000,
+    "RetryAttempts": 3,
+    "RetryDelaySeconds": 5
+  },
+  "SecuritySettings": {
+    "ValidateSSL": true,
+    "EncryptSensitiveData": true,
+    "AuditLogging": true,
+    "MaxConcurrentConnections": 10
+  },
+  "PerformanceSettings": {
+    "RequestTimeoutSeconds": 300,
+    "MaxRetries": 3,
+    "BackoffStrategy": "exponential",
+    "EnableCompression": true
+  }
+}

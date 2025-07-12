@@ -1,0 +1,210 @@
+{
+  "comment": "CloudScope Configuration Template - Copy to cloudscope-config.json and customize",
+  "database": {
+    "type": "memgraph",
+    "host": "localhost",
+    "port": 7687,
+    "username": "",
+    "password": "",
+    "ssl_enabled": true,
+    "connection_pool_size": 10,
+    "connection_timeout": 30
+  },
+  "security": {
+    "jwt_secret_key": "CHANGE_THIS_TO_A_SECURE_RANDOM_STRING_IN_PRODUCTION",
+    "jwt_algorithm": "HS256",
+    "jwt_expiration_minutes": 30,
+    "api_rate_limit": 100,
+    "allowed_origins": ["http://localhost:3000", "https://app.cloudscope.io"],
+    "allowed_hosts": ["localhost", "*.cloudscope.io"],
+    "encryption_password": "CHANGE_THIS_TO_A_SECURE_PASSWORD_FOR_FIELD_ENCRYPTION"
+  },
+  "collectors": {
+    "microsoft_365": {
+      "enabled": true,
+      "tenant_id": "your-tenant-id-here",
+      "client_id": "your-client-id-here",
+      "client_secret": "your-client-secret-here",
+      "certificate_thumbprint": "",
+      "collection_interval_minutes": 60,
+      "detailed_collection": false,
+      "asset_types": ["Users", "Groups", "Applications", "Devices"]
+    },
+    "azure": {
+      "enabled": true,
+      "subscription_ids": ["subscription-1", "subscription-2"],
+      "collection_interval_minutes": 120,
+      "detailed_collection": false,
+      "resource_types": ["VirtualMachines", "StorageAccounts", "Databases", "NetworkResources"]
+    },
+    "aws": {
+      "enabled": false,
+      "access_key_id": "",
+      "secret_access_key": "",
+      "regions": ["us-east-1", "us-west-2"],
+      "collection_interval_minutes": 120,
+      "detailed_collection": false
+    },
+    "gcp": {
+      "enabled": false,
+      "project_ids": ["project-1", "project-2"],
+      "service_account_key_path": "/path/to/service-account.json",
+      "collection_interval_minutes": 120,
+      "detailed_collection": false
+    }
+  },
+  "exports": {
+    "siem_connectors": {
+      "crowdstrike": {
+        "enabled": false,
+        "api_url": "https://api.crowdstrike.com",
+        "client_id": "your-crowdstrike-client-id",
+        "client_secret": "your-crowdstrike-client-secret",
+        "export_interval_minutes": 30
+      },
+      "splunk": {
+        "enabled": false,
+        "hec_url": "https://your-splunk-instance:8088/services/collector",
+        "hec_token": "your-hec-token",
+        "index": "cloudscope",
+        "export_interval_minutes": 30
+      },
+      "sentinel": {
+        "enabled": false,
+        "workspace_id": "your-workspace-id",
+        "shared_key": "your-shared-key",
+        "log_type": "CloudScopeAssets",
+        "export_interval_minutes": 30
+      },
+      "elastic": {
+        "enabled": false,
+        "elasticsearch_url": "https://your-elastic-instance:9200",
+        "api_key": "your-api-key",
+        "index": "cloudscope-assets",
+        "export_interval_minutes": 30
+      }
+    },
+    "file_exports": {
+      "csv": {
+        "enabled": true,
+        "output_directory": "./exports/csv",
+        "export_interval_minutes": 1440
+      },
+      "json": {
+        "enabled": true,
+        "output_directory": "./exports/json",
+        "export_interval_minutes": 1440
+      },
+      "xlsx": {
+        "enabled": false,
+        "output_directory": "./exports/xlsx",
+        "export_interval_minutes": 1440
+      }
+    }
+  },
+  "processing": {
+    "batch_size": 1000,
+    "relationship_detection": {
+      "enabled": true,
+      "algorithms": ["direct_reference", "network_topology", "access_patterns"],
+      "confidence_threshold": 0.7
+    },
+    "risk_scoring": {
+      "enabled": true,
+      "auto_update": true,
+      "custom_rules_enabled": false
+    },
+    "data_retention": {
+      "asset_history_days": 90,
+      "relationship_history_days": 90,
+      "audit_log_days": 365,
+      "performance_metrics_days": 30
+    }
+  },
+  "monitoring": {
+    "metrics": {
+      "enabled": true,
+      "prometheus_port": 9090,
+      "collection_interval_seconds": 60
+    },
+    "logging": {
+      "level": "INFO",
+      "file_logging": true,
+      "log_directory": "./logs",
+      "max_log_size_mb": 100,
+      "log_retention_days": 30,
+      "structured_logging": true
+    },
+    "health_checks": {
+      "enabled": true,
+      "interval_seconds": 30,
+      "timeout_seconds": 10
+    }
+  },
+  "performance": {
+    "caching": {
+      "enabled": true,
+      "redis_url": "redis://localhost:6379",
+      "cache_ttl_seconds": 3600,
+      "max_memory_cache_items": 1000
+    },
+    "async_processing": {
+      "enabled": true,
+      "worker_threads": 4,
+      "queue_size": 10000
+    },
+    "database_optimization": {
+      "connection_pooling": true,
+      "query_timeout_seconds": 30,
+      "batch_insert_size": 1000
+    }
+  },
+  "compliance": {
+    "audit_logging": {
+      "enabled": true,
+      "log_all_api_calls": true,
+      "log_data_access": true,
+      "log_configuration_changes": true
+    },
+    "data_privacy": {
+      "field_encryption": true,
+      "pii_detection": true,
+      "data_anonymization": false
+    },
+    "retention_policies": {
+      "enforce_retention": true,
+      "auto_deletion": false,
+      "compliance_reports": true
+    }
+  },
+  "features": {
+    "experimental": {
+      "ml_relationship_detection": false,
+      "advanced_analytics": false,
+      "predictive_risk_scoring": false
+    },
+    "integrations": {
+      "webhook_notifications": false,
+      "slack_notifications": false,
+      "teams_notifications": false,
+      "email_notifications": false
+    },
+    "ui_features": {
+      "dark_mode": true,
+      "advanced_filters": true,
+      "bulk_operations": true,
+      "export_scheduler": false
+    }
+  },
+  "deployment": {
+    "environment": "development",
+    "cluster_mode": false,
+    "auto_scaling": false,
+    "backup": {
+      "enabled": false,
+      "schedule": "0 2 * * *",
+      "retention_days": 30,
+      "backup_location": "./backups"
+    }
+  }
+}

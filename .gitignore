@@ -1,0 +1,202 @@
+# CloudScope .gitignore
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+cover/
+
+# Virtual environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Configuration files with secrets
+config/cloudscope-config.json
+config/m365-config.json
+config/*-config.json
+!config/*.example.json
+
+# Environment variables
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Database
+*.db
+*.sqlite3
+*.db-journal
+
+# Output directories
+output/
+exports/
+backups/
+temp/
+tmp/
+
+# Docker
+docker-compose.override.yml
+.dockerignore
+
+# Kubernetes
+*.secret.yaml
+*-secret.yaml
+
+# Security files
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+certificates/
+keys/
+secrets/
+
+# PowerShell
+*.ps1xml
+
+# Node.js (for future web UI)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Next.js (for future web UI)
+.next/
+out/
+
+# Nuxt.js (for future web UI)
+.nuxt
+dist
+
+# Test results
+test-results/
+coverage/
+.nyc_output
+
+# Performance data
+*.cpuprofile
+*.heapprofile
+*.heapsnapshot
+
+# Documentation builds
+site/
+docs/_build/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# IPython
+profile_default/
+ipython_config.py
+
+# Celery
+celerybeat-schedule
+celerybeat.pid
+
+# SageMath parsed files
+*.sage.py
+
+# Spyder project settings
+.spyderproject
+.spyproject
+
+# Rope project settings
+.ropeproject
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Pyre type checker
+.pyre/
+
+# pytype static type analyzer
+.pytype/
+
+# Cython debug symbols
+cython_debug/
+
+# PyCharm
+#  JetBrains specific template is maintained in a separate JetBrains.gitignore that can
+#  be added to the global gitignore or merged into this project gitignore.  For a PyCharm
+#  project, it is usually recommended to add the following:
+*.idea/
+
+# Security scanner results
+bandit-report.json
+safety-report.json
+semgrep-report.json
+trivy-results.sarif
+pip-audit-report.json
+
+# CloudScope specific
+cloudscope-sbom.spdx.json
+security-summary.md
