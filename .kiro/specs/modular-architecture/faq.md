@@ -1,4 +1,7 @@
 # CloudScope Modular Architecture: Frequently Asked Questions
+<!-- Created by: Claude -->
+<!-- Last modified by: Claude -->
+<!-- Date: 2025-07-16 -->
 
 ## General Questions
 

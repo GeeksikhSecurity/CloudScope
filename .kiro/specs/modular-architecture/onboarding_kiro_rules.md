@@ -1,4 +1,7 @@
 # Onboarding Kiro Rules for CloudScope Modular Architecture
+<!-- Created by: Claude -->
+<!-- Last modified by: Claude -->
+<!-- Date: 2025-07-16 -->
 
 ## Overview
 
