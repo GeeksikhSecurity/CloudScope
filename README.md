@@ -120,6 +120,9 @@ cp config/cloudscope-config.example.json config/cloudscope-config.json
 - [Collector Development](docs/development/collectors.md)
 - [Security Guidelines](docs/security/README.md)
 - [Troubleshooting](docs/troubleshooting/README.md)
+- [Quick Start Guide](.kiro/specs/modular-architecture/quickstart_guide.md)
+- [FAQ](.kiro/specs/modular-architecture/faq.md)
+- [Modular Architecture Design](.kiro/specs/modular-architecture/design.md)
 
 ## 🛡️ **Security**
 
