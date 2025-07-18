@@ -1,0 +1,428 @@
+name: CloudScope CI/CD with Compliance
+
+on:
+  push:
+    branches: [ main, develop, feature/* ]
+  pull_request:
+    branches: [ main, develop ]
+
+env:
+  PYTHON_VERSION: '3.9'
+  CLOUDSCOPE_ENCRYPTION_KEY: ${{ secrets.CLOUDSCOPE_ENCRYPTION_KEY }}
+
+jobs:
+  compliance-check:
+    name: Compliance Analysis
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+        
+    - name: Cache dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+          
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install -e .
+        
+    - name: Generate encryption key (if not provided)
+      if: env.CLOUDSCOPE_ENCRYPTION_KEY == ''
+      run: |
+        python -c "
+        from cloudscope.infrastructure.compliance.crypto import generate_key_string
+        print('CLOUDSCOPE_ENCRYPTION_KEY=' + generate_key_string())
+        " >> $GITHUB_ENV
+        
+    - name: Run Kiro compliance checks
+      run: |
+        python .kiro/rules/check_compliance.py . \
+          --format json \
+          --output compliance-report.json \
+          --fail-on-violations \
+          --severity error
+          
+    - name: Run static compliance analysis
+      run: |
+        python -m cloudscope.cli.compliance_commands compliance analyze . \
+          --format json \
+          --output static-analysis.json \
+          --severity warning
+          
+    - name: Upload compliance reports
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: compliance-reports
+        path: |
+          compliance-report.json
+          static-analysis.json
+          
+    - name: Comment PR with compliance results
+      if: github.event_name == 'pull_request'
+      uses: actions/github-script@v6
+      with:
+        script: |
+          const fs = require('fs');
+          
+          try {
+            const complianceData = JSON.parse(fs.readFileSync('compliance-report.json', 'utf8'));
+            const staticData = JSON.parse(fs.readFileSync('static-analysis.json', 'utf8'));
+            
+            const totalViolations = complianceData.summary.total_violations;
+            const complianceScore = staticData.compliance_score || 0;
+            
+            let comment = `## 🔒 Compliance Check Results\n\n`;
+            comment += `**Compliance Score**: ${complianceScore.toFixed(1)}%\n`;
+            comment += `**Kiro Violations**: ${totalViolations}\n\n`;
+            
+            if (totalViolations > 0) {
+              comment += `### Violations by Severity\n`;
+              for (const [severity, count] of Object.entries(complianceData.summary.by_severity)) {
+                const icon = severity === 'critical' ? '🚨' : severity === 'error' ? '❌' : 
+                           severity === 'warning' ? '⚠️' : 'ℹ️';
+                comment += `- ${icon} ${severity}: ${count}\n`;
+              }
+              
+              comment += `\n### Violations by Framework\n`;
+              for (const [framework, count] of Object.entries(complianceData.summary.by_framework)) {
+                comment += `- ${framework}: ${count}\n`;
+              }
+            } else {
+              comment += `✅ No compliance violations found!`;
+            }
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
+          } catch (error) {
+            console.log('Could not read compliance reports:', error);
+          }
+
+  security-scan:
+    name: Security Scanning
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Run Bandit security scan
+      run: |
+        pip install bandit[toml]
+        bandit -r cloudscope/ -f json -o bandit-report.json || true
+        
+    - name: Run Safety dependency check
+      run: |
+        pip install safety
+        safety check --json --output safety-report.json || true
+        
+    - name: Upload security reports
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: security-reports
+        path: |
+          bandit-report.json
+          safety-report.json
+
+  test:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        python-version: ['3.8', '3.9', '3.10', '3.11']
+        
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+        
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install -e .
+        
+    - name: Generate test encryption key
+      run: |
+        python -c "
+        from cloudscope.infrastructure.compliance.crypto import generate_key_string
+        print('CLOUDSCOPE_ENCRYPTION_KEY=' + generate_key_string())
+        " >> $GITHUB_ENV
+        
+    - name: Run unit tests
+      run: |
+        pytest tests/ \
+          --cov=cloudscope \
+          --cov-report=xml \
+          --cov-report=html \
+          --cov-report=term-missing \
+          --junitxml=test-results.xml
+          
+    - name: Upload test results
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: test-results-${{ matrix.python-version }}
+        path: |
+          test-results.xml
+          htmlcov/
+          
+    - name: Upload coverage to Codecov
+      if: matrix.python-version == '3.9'
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./coverage.xml
+        flags: unittests
+        name: codecov-umbrella
+
+  integration-test:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    needs: [compliance-check, test]
+    
+    services:
+      memgraph:
+        image: memgraph/memgraph:latest
+        ports:
+          - 7687:7687
+        options: >-
+          --health-cmd "echo 'RETURN 1;' | mgconsole --host 127.0.0.1 --port 7687"
+          --health-interval 30s
+          --health-timeout 10s
+          --health-retries 5
+          
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+        
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install -e .
+        
+    - name: Run integration tests
+      env:
+        MEMGRAPH_HOST: localhost
+        MEMGRAPH_PORT: 7687
+      run: |
+        pytest tests/integration/ -v \
+          --tb=short \
+          --junit-xml=integration-test-results.xml
+          
+    - name: Upload integration test results
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: integration-test-results
+        path: integration-test-results.xml
+
+  compliance-report:
+    name: Generate Compliance Report
+    runs-on: ubuntu-latest
+    needs: [compliance-check, security-scan, test]
+    if: always()
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+        
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install -e .
+        
+    - name: Download all artifacts
+      uses: actions/download-artifact@v3
+      
+    - name: Generate comprehensive compliance report
+      run: |
+        python -c "
+        import json
+        import os
+        from datetime import datetime
+        
+        # Collect all compliance data
+        report_data = {
+          'timestamp': datetime.now().isoformat(),
+          'commit': '${{ github.sha }}',
+          'branch': '${{ github.ref_name }}',
+          'pr_number': '${{ github.event.number }}' if '${{ github.event_name }}' == 'pull_request' else None,
+          'compliance': {},
+          'security': {},
+          'tests': {}
+        }
+        
+        # Load compliance reports if they exist
+        try:
+          with open('compliance-reports/compliance-report.json', 'r') as f:
+            report_data['compliance']['kiro'] = json.load(f)
+        except FileNotFoundError:
+          print('Kiro compliance report not found')
+        
+        try:
+          with open('compliance-reports/static-analysis.json', 'r') as f:
+            report_data['compliance']['static'] = json.load(f)
+        except FileNotFoundError:
+          print('Static analysis report not found')
+          
+        # Load security reports if they exist
+        try:
+          with open('security-reports/bandit-report.json', 'r') as f:
+            report_data['security']['bandit'] = json.load(f)
+        except FileNotFoundError:
+          print('Bandit report not found')
+          
+        try:
+          with open('security-reports/safety-report.json', 'r') as f:
+            report_data['security']['safety'] = json.load(f)
+        except FileNotFoundError:
+          print('Safety report not found')
+        
+        # Save comprehensive report
+        with open('comprehensive-compliance-report.json', 'w') as f:
+          json.dump(report_data, f, indent=2)
+        "
+        
+    - name: Generate HTML compliance dashboard
+      run: |
+        python .kiro/rules/check_compliance.py . \
+          --format html \
+          --output compliance-dashboard.html || true
+          
+    - name: Upload comprehensive report
+      uses: actions/upload-artifact@v3
+      with:
+        name: comprehensive-compliance-report
+        path: |
+          comprehensive-compliance-report.json
+          compliance-dashboard.html
+
+  deploy-staging:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    needs: [compliance-check, security-scan, test, integration-test]
+    if: github.ref == 'refs/heads/develop' && github.event_name == 'push'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Deploy to staging environment
+      run: |
+        echo "🚀 Deploying to staging environment"
+        # Add your staging deployment logic here
+        
+    - name: Run post-deployment compliance verification
+      run: |
+        echo "🔒 Running post-deployment compliance checks"
+        # Add post-deployment compliance verification
+
+  deploy-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: [compliance-check, security-scan, test, integration-test]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    
+    environment:
+      name: production
+      url: https://cloudscope.example.com
+      
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Final compliance verification
+      run: |
+        echo "🔒 Running final compliance verification for production"
+        # Run comprehensive compliance checks before production deployment
+        
+    - name: Deploy to production
+      run: |
+        echo "🚀 Deploying to production environment"
+        # Add your production deployment logic here
+        
+    - name: Post-deployment monitoring setup
+      run: |
+        echo "📊 Setting up post-deployment compliance monitoring"
+        # Set up compliance monitoring and alerting
+
+  nightly-compliance-scan:
+    name: Nightly Compliance Scan
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+        
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install -e .
+        
+    - name: Run comprehensive compliance scan
+      run: |
+        python .kiro/rules/check_compliance.py . \
+          --format json \
+          --output nightly-compliance-scan.json \
+          --severity info
+          
+    - name: Generate detailed compliance report
+      run: |
+        python -m cloudscope.cli.compliance_commands compliance report \
+          --type metrics \
+          --format html \
+          --output nightly-compliance-metrics.html
+          
+    - name: Send compliance report to team
+      run: |
+        echo "📧 Sending nightly compliance report to compliance team"
+        # Add logic to send report via email/Slack/Teams
+        
+    - name: Upload nightly scan results
+      uses: actions/upload-artifact@v3
+      with:
+        name: nightly-compliance-scan
+        path: |
+          nightly-compliance-scan.json
+          nightly-compliance-metrics.html

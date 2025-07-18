@@ -1,197 +1,283 @@
-# CloudScope: Open Source Unified Asset Inventory 
+# CloudScope - Comprehensive IT Asset Inventory System
 
-<div align="center">
+<p align="center">
+  <img src="docs/assets/cloudscope-logo.png" alt="CloudScope Logo" width="200">
+</p>
 
-![CloudScope Logo](docs/assets/logo.png)
+<p align="center">
+  <a href="https://github.com/your-org/cloudscope/actions"><img src="https://github.com/your-org/cloudscope/workflows/CI/badge.svg" alt="CI Status"></a>
+  <a href="https://codecov.io/gh/your-org/cloudscope"><img src="https://codecov.io/gh/your-org/cloudscope/branch/main/graph/badge.svg" alt="Coverage"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License"></a>
+  <a href="https://github.com/your-org/cloudscope/releases"><img src="https://img.shields.io/github/v/release/your-org/cloudscope" alt="Release"></a>
+</p>
 
-**A community-driven, open-source centralized asset inventory platform for security and operations teams**
+## Overview
 
-[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
-[![Security Rating](https://img.shields.io/badge/Security-A+-green.svg)](SECURITY.md)
-[![Contributions Welcome](https://img.shields.io/badge/Contributions-Welcome-brightgreen.svg)](CONTRIBUTING.md)
-[![Docker](https://img.shields.io/badge/Docker-Ready-blue.svg)](docker-compose.yml)
+CloudScope is a modern, extensible IT asset inventory system designed to discover, track, and manage infrastructure assets across multiple cloud providers and on-premises environments. Built with a plugin-based architecture, it provides comprehensive visibility into your IT landscape while maintaining flexibility and scalability.
 
-[Features](#-features) • [Quick Start](#-quick-start) • [Documentation](#-documentation) • [Contributing](#-contributing) • [Community](#-community)
+### Key Features
 
-</div>
+- 🔍 **Multi-Cloud Discovery**: Automatic discovery of assets across AWS, Azure, GCP, and Kubernetes
+- 🔌 **Plugin Architecture**: Extensible design supporting custom collectors and exporters
+- 📊 **Multiple Storage Backends**: File-based, SQLite, and Memgraph (graph database) support
+- 📈 **Rich Reporting**: Generate reports in JSON, CSV, HTML, PDF, and Markdown formats
+- 🤖 **LLM-Optimized Export**: Special CSV format optimized for Large Language Model analysis
+- 🔒 **Enterprise Security**: JWT authentication, RBAC, encryption at rest and in transit
+- 📡 **Comprehensive Monitoring**: Built-in metrics, tracing, and health checks
+- 🔄 **Resilience Patterns**: Circuit breakers, retry logic, and graceful degradation
+- 🎯 **Risk Analysis**: Automated risk scoring and compliance checking
+- 🔗 **Third-Party Integrations**: Slack, Teams, Jira, ServiceNow, PagerDuty, and more
 
-## 🎯 **Project Vision**
+## Quick Start
 
-CloudScope combines the graph-based relationship mapping of Cartography with modern PowerShell Microsoft Graph integration to create a comprehensive, SIEM-independent asset inventory solution. Built for the community, by the community.
+### Prerequisites
 
-### **Why CloudScope?**
+- Python 3.8 or higher
+- Docker and Docker Compose (for containerized deployment)
+- Cloud provider credentials (AWS, Azure, GCP) for asset discovery
 
-- 🚫 **No Vendor Lock-in**: Open source alternative to expensive commercial tools
-- 🔗 **Relationship Mapping**: Understand asset dependencies and attack paths
-- 🔌 **SIEM Agnostic**: Export to any SIEM (CrowdStrike, Splunk, Sentinel, Elastic)
-- 🌐 **Multi-Cloud**: Unified view across AWS, Azure, GCP, and on-premises
-- ⚡ **High Performance**: Built on Memgraph for lightning-fast graph queries
-- 🛡️ **Security First**: Built-in risk scoring and compliance reporting
+### Installation
 
-## ✨ **Features**
+#### Option 1: Docker (Recommended)
 
-### **Asset Discovery & Collection**
-- **Microsoft 365**: Users, Groups, Applications, Devices, SharePoint, Teams
-- **Azure**: VMs, Storage, Databases, Network Resources, Security Resources
-- **AWS**: EC2, S3, RDS, VPC, IAM (via Python collectors)
-- **Google Cloud**: Compute, Storage, IAM (via Python collectors)
-- **On-Premises**: Active Directory, VMware, Network devices
-
-### **Advanced Analytics**
-- **Relationship Mapping**: Automated discovery of asset relationships
-- **Risk Scoring**: Built-in security risk assessment
-- **Change Detection**: Monitor configuration drift and unauthorized changes
-- **Compliance Reporting**: Pre-built reports for SOC2, ISO27001, PCI-DSS
-
-### **Integration & Export**
-- **SIEM Connectors**: CrowdStrike, Splunk, Microsoft Sentinel, Elastic
-- **APIs**: RESTful and GraphQL interfaces
-- **Dashboards**: Grafana, PowerBI, Tableau integration
-- **Automation**: Webhook triggers for security events
-
-## 🚀 **Quick Start**
-
-### **Prerequisites**
-- Docker & Docker Compose
-- PowerShell 7+ (for Microsoft collectors)
-- Python 3.9+ (for core engine)
-
-### **1. Clone & Deploy**
 ```bash
-git clone https://github.com/GeeksikhSecurity/CloudScope.git
-cd CloudScope
+# Clone the repository
+git clone https://github.com/your-org/cloudscope.git
+cd cloudscope
+
+# Copy and configure environment variables
+cp .env.example .env
+# Edit .env with your configuration
+
+# Start CloudScope with Docker Compose
 docker-compose up -d
+
+# Verify installation
+docker-compose exec cloudscope cloudscope health-check
 ```
 
-### **2. Configure**
+#### Option 2: Native Installation
+
 ```bash
-cp config/cloudscope-config.example.json config/cloudscope-config.json
-# Edit configuration with your environment details
+# Clone the repository
+git clone https://github.com/your-org/cloudscope.git
+cd cloudscope
+
+# Create virtual environment
+python3 -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+
+# Install CloudScope
+pip install -r requirements.txt
+pip install -e .
+
+# Initialize configuration
+cloudscope config init
+
+# Run initial collection
+cloudscope collect --dry-run
 ```
 
-### **3. Run First Collection**
-```powershell
-# Microsoft 365 Collection
-./collectors/powershell/microsoft-365/Get-M365Assets.ps1 -OutputFormat Database
+### Basic Usage
+
+#### Collect Assets
+```bash
+# Collect from all configured providers
+cloudscope collect
+
+# Collect from specific provider
+cloudscope collect --provider aws --regions us-east-1,us-west-2
+
+# Collect specific asset types
+cloudscope collect --types compute,storage
 ```
 
-### **4. Access Dashboards**
-- **Main Dashboard**: http://localhost:3000
-- **GraphQL Explorer**: http://localhost:8000/graphql
-- **API Documentation**: http://localhost:8000/docs
+#### Generate Reports
+```bash
+# Generate JSON report
+cloudscope report generate --format json
 
-## 🏗️ **Architecture**
+# Generate LLM-optimized CSV
+cloudscope report generate --format csv --llm-optimized
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                        CloudScope Platform                      │
-├─────────────────────────────────────────────────────────────────┤
-│  Data Collection Layer                                          │
-│  ┌─────────────┐ ┌─────────────┐ ┌─────────────┐ ┌──────────────┐ │
-│  │ PowerShell  │ │   Python    │ │    REST     │ │   Custom     │ │
-│  │ Collectors  │ │ Collectors  │ │  Connectors │ │ Integrations │ │
-│  └─────────────┘ └─────────────┘ └─────────────┘ └──────────────┘ │
-├─────────────────────────────────────────────────────────────────┤
-│  Data Processing & Storage Layer                                │
-│  ┌─────────────┐ ┌─────────────┐ ┌─────────────┐                │
-│  │  Memgraph   │ │  PostgreSQL │ │ Elasticsearch│                │
-│  │ (Graph DB)  │ │ (Metadata)  │ │ (Search/Logs)│                │
-│  └─────────────┘ └─────────────┘ └─────────────┘                │
-├─────────────────────────────────────────────────────────────────┤
-│  API & Export Layer                                             │
-│  ┌─────────────┐ ┌─────────────┐ ┌─────────────┐                │
-│  │ GraphQL API │ │  REST API   │ │  SIEM/CSV   │                │
-│  │             │ │             │ │   Exports   │                │
-│  └─────────────┘ └─────────────┘ └─────────────┘                │
-├─────────────────────────────────────────────────────────────────┤
-│  Visualization & Reporting Layer                                │
-│  ┌─────────────┐ ┌─────────────┐ ┌─────────────┐                │
-│  │   Web UI    │ │  Grafana    │ │ PowerBI/    │                │
-│  │  Dashboard  │ │ Dashboards  │ │ Tableau     │                │
-│  └─────────────┘ └─────────────┘ └─────────────┘                │
-└─────────────────────────────────────────────────────────────────┘
+# Generate HTML report with charts
+cloudscope report generate --format html --include-charts
 ```
 
-## 📚 **Documentation**
+#### Risk Analysis
+```bash
+# Run risk analysis
+cloudscope risk analyze
 
-- [Installation Guide](docs/installation/README.md)
-- [Configuration Reference](docs/configuration/README.md)
-- [API Documentation](docs/api-reference/README.md)
-- [Collector Development](docs/development/collectors.md)
-- [Security Guidelines](docs/security/README.md)
-- [Troubleshooting](docs/troubleshooting/README.md)
-- [Quick Start Guide](.kiro/specs/modular-architecture/quickstart_guide.md)
-- [FAQ](.kiro/specs/modular-architecture/faq.md)
-- [Modular Architecture Design](.kiro/specs/modular-architecture/design.md)
+# Generate risk report
+cloudscope risk report --format pdf
+```
 
-## 🛡️ **Security**
+## Architecture
 
-CloudScope is built with security as a first-class citizen:
+CloudScope follows a hexagonal architecture pattern with clear separation between business logic and infrastructure concerns:
 
-- **Secure by Default**: All components use secure configurations
-- **Least Privilege**: Minimal permissions required for data collection
-- **Encryption**: Data encrypted in transit and at rest
-- **Audit Logging**: Comprehensive audit trails for all operations
-- **Regular Security Scans**: Automated vulnerability assessments
+```
+┌─────────────────┐
+│ External Systems│
+└────────┬────────┘
+         │
+┌────────▼────────┐
+│  Plugin Layer   │
+├─────────────────┤
+│  Domain Layer   │
+├─────────────────┤
+│ Port Interfaces │
+├─────────────────┤
+│ Adapter Layer   │
+├─────────────────┤
+│ Infrastructure  │
+└─────────────────┘
+```
 
-See our [Security Policy](SECURITY.md) for vulnerability reporting.
+For detailed architecture information, see [Architecture Documentation](docs/ARCHITECTURE.md).
 
-## 🤝 **Contributing**
+## Configuration
 
-We welcome contributions from the community! Whether you're fixing bugs, adding features, or improving documentation, your help makes CloudScope better for everyone.
+CloudScope uses a flexible configuration system supporting JSON files, environment variables, and command-line arguments. 
 
-- [Contributing Guidelines](CONTRIBUTING.md)
-- [Development Setup](docs/development/setup.md)
-- [Code of Conduct](CODE_OF_CONDUCT.md)
-- [Issue Templates](.github/ISSUE_TEMPLATE/)
+Example configuration:
+```json
+{
+  "storage": {
+    "type": "sqlite",
+    "connection": {
+      "path": "./data/cloudscope.db"
+    }
+  },
+  "collectors": {
+    "enabled": ["aws", "azure", "gcp"],
+    "schedule": "0 * * * *"
+  },
+  "reporting": {
+    "default_format": "json",
+    "output_directory": "./reports"
+  }
+}
+```
 
-## 🌟 **Community**
+See [Configuration Guide](docs/CONFIGURATION_GUIDE.md) for detailed configuration options.
 
-- **Discussions**: [GitHub Discussions](https://github.com/GeeksikhSecurity/CloudScope/discussions)
-- **Issues**: [Bug Reports & Feature Requests](https://github.com/GeeksikhSecurity/CloudScope/issues)
-- **Discord**: [CloudScope Community](https://discord.gg/cloudscope)
-- **Twitter**: [@CloudScopeOSS](https://twitter.com/CloudScopeOSS)
+## Scripts and Utilities
 
-## 📈 **Roadmap**
+CloudScope includes comprehensive shell scripts for various operations:
 
-### **Phase 1: Foundation (Q1 2025)**
-- [x] Core asset collection framework
-- [x] Memgraph database integration
-- [x] PowerShell Microsoft Graph collectors
-- [ ] Basic web interface
-- [ ] Docker deployment
+- **Reporting**: `scripts/reporting/generate-report.sh`
+- **Risk Analysis**: `scripts/risk-analysis/risk-scoring.sh`
+- **Troubleshooting**: `scripts/troubleshooting/diagnose-issues.sh`
+- **Utilities**: `scripts/utilities/cloudscope-utils.sh`
+- **Integrations**: `scripts/integrations/external-integrations.sh`
 
-### **Phase 2: Enhancement (Q2 2025)**
-- [ ] Python collectors for AWS/GCP
-- [ ] Advanced relationship detection
-- [ ] SIEM export modules
-- [ ] Grafana dashboards
-- [ ] Performance optimization
+See [Scripts Documentation](docs/SCRIPTS_DOCUMENTATION.md) for detailed usage.
 
-### **Phase 3: Advanced Features (Q3-Q4 2025)**
-- [ ] Machine learning for anomaly detection
-- [ ] Automated compliance checking
-- [ ] Advanced security analytics
-- [ ] Mobile application
-- [ ] Enterprise features
+## Monitoring and Observability
 
-## 📄 **License**
+CloudScope provides comprehensive monitoring through:
 
-This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENSE) file for details.
+- **Structured Logging**: JSON-formatted logs with trace correlation
+- **Metrics**: Prometheus-compatible metrics endpoint
+- **Distributed Tracing**: OpenTelemetry integration
+- **Health Checks**: Comprehensive health check endpoints
 
-## 🙏 **Acknowledgments**
+Example Prometheus query for asset count:
+```promql
+sum(cloudscope_assets_total) by (type, provider)
+```
 
-- Inspired by [Cartography](https://github.com/cartography-cncf/cartography) from Lyft
-- Built on [Memgraph](https://memgraph.com/) for high-performance graph processing
-- Powered by [Microsoft Graph](https://graph.microsoft.com/) for Microsoft 365 integration
-- Community-driven development model
+See [Monitoring Guide](docs/MONITORING_GUIDE.md) for dashboard setup and alerting.
+
+## Plugin Development
+
+Create custom plugins to extend CloudScope functionality:
+
+```python
+from cloudscope.plugin import Plugin
+
+class MyCustomCollector(Plugin):
+    name = "my-collector"
+    version = "1.0.0"
+    
+    def collect(self):
+        # Your collection logic here
+        return assets
+```
+
+See [Plugin Development Guide](docs/PLUGIN_DEVELOPMENT.md) for detailed instructions.
+
+## Security
+
+CloudScope implements multiple security layers:
+
+- **Authentication**: JWT-based authentication
+- **Authorization**: Role-based access control (RBAC)
+- **Encryption**: At-rest and in-transit encryption
+- **Input Validation**: Comprehensive input validation and sanitization
+- **Audit Logging**: Detailed audit trail of all operations
+
+See [Security Guide](docs/SECURITY_GUIDE.md) for security best practices.
+
+## Contributing
+
+We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details on:
+
+- Code style and standards
+- Development workflow
+- Testing requirements
+- Pull request process
+
+## Documentation
+
+- [Installation Guide](docs/INSTALLATION_GUIDE.md)
+- [Configuration Guide](docs/CONFIGURATION_GUIDE.md)
+- [Architecture Documentation](docs/ARCHITECTURE.md)
+- [Scripts Documentation](docs/SCRIPTS_DOCUMENTATION.md)
+- [Monitoring Guide](docs/MONITORING_GUIDE.md)
+- [API Reference](docs/API_REFERENCE.md)
+- [Troubleshooting Guide](docs/TROUBLESHOOTING.md)
+
+## Roadmap
+
+### Current Release (v1.4.0)
+- ✅ Multi-cloud asset discovery
+- ✅ Plugin system
+- ✅ Multiple storage backends
+- ✅ Comprehensive reporting
+- ✅ Risk analysis
+- ✅ External integrations
+
+### Upcoming Features (v2.0.0)
+- 🔄 Machine Learning anomaly detection
+- 🔄 Multi-tenancy support
+- 🔄 GraphQL API
+- 🔄 Real-time asset updates
+- 🔄 Advanced relationship detection
+
+See [ROADMAP.md](ROADMAP.md) for detailed feature plans.
+
+## Support
+
+- **Documentation**: [https://docs.cloudscope.io](https://docs.cloudscope.io)
+- **Issues**: [GitHub Issues](https://github.com/your-org/cloudscope/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/your-org/cloudscope/discussions)
+- **Security**: security@cloudscope.io
+
+## License
+
+CloudScope is licensed under the MIT License. See [LICENSE](LICENSE) for details.
+
+## Acknowledgments
+
+- Built with Python and love ❤️
+- Inspired by cloud-native principles
+- Thanks to all [contributors](CONTRIBUTORS.md)
 
 ---
 
-<div align="center">
-
-**⭐ Star this repository if you find it useful! ⭐**
-
-*Built with ❤️ by the CloudScope Community*
-
-</div>
+<p align="center">
+  Made with ☁️ by the CloudScope Team
+</p>

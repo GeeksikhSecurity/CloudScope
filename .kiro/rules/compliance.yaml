@@ -1,0 +1,321 @@
+# CloudScope Compliance Kiro Rules
+#
+# These rules enforce compliance-as-code requirements for CloudScope,
+# ensuring that regulatory frameworks like GDPR, PCI DSS, HIPAA, and SOC 2
+# are properly implemented through code annotations and patterns.
+
+rules:
+  # GDPR Compliance Rules
+  - name: "gdpr-personal-data-classification"
+    description: "Ensures personal data is properly classified according to GDPR requirements"
+    check:
+      type: "content-check"
+      pattern: "cloudscope/**/*.py"
+      content-pattern: "@data_classification\\(['\"]personal['\"]\\)"
+      condition: "must-contain-for-matches"
+      match-pattern: ".*name.*|.*email.*|.*address.*|.*phone.*|.*ssn.*|.*social.*"
+    message: "Personal data must be classified with @data_classification('personal') decorator according to GDPR requirements"
+    severity: "error"
+    framework: "GDPR"
+    documentation: |
+      GDPR requires that personal data processing has a lawful basis and is properly documented.
+      Use the @data_classification('personal') decorator on functions that handle personal data.
+      
+      Example:
+      @data_classification("personal")
+      def update_user_email(self, email: str):
+          self.email = email
+
+  - name: "gdpr-audit-logging"
+    description: "Ensures personal data operations are audit logged for GDPR accountability"
+    check:
+      type: "content-check"
+      pattern: "cloudscope/**/*.py"
+      content-pattern: "@audit_log"
+      condition: "must-contain-for-matches"
+      match-pattern: "def.*(?:delete|remove|update).*(?:personal|user|email|name|address)"
+    message: "Personal data modification operations must include @audit_log decorator for GDPR accountability"
+    severity: "error"
+    framework: "GDPR"
+    documentation: |
+      GDPR Article 5(2) requires accountability - organizations must demonstrate compliance.
+      All personal data operations should be logged for audit purposes.
+
+  - name: "gdpr-data-export-method"
+    description: "Ensures classes handling personal data implement data export for portability rights"
+    check:
+      type: "content-check"
+      pattern: "cloudscope/**/*.py"
+      content-pattern: "def.*(?:get_data_export|export_data|data_export)"
+      condition: "must-contain-for-classes-with"
+      match-pattern: "@data_classification\\(['\"]personal['\"]\\)"
+    message: "Classes handling personal data should implement data export method for GDPR data portability rights"
+    severity: "warning"
+    framework: "GDPR"
+
+  # PCI DSS Compliance Rules  
+  - name: "pci-card-data-encryption"
+    description: "Ensures payment card data is encrypted according to PCI DSS requirements"
+    check:
+      type: "content-check"
+      pattern: "cloudscope/**/*.py"
+      content-pattern: "@encrypted"
+      condition: "must-contain-for-matches"
+      match-pattern: ".*card.*|.*payment.*|.*credit.*|.*cvv.*|.*pan.*"
+    message: "Payment card data must be encrypted using @encrypted decorator according to PCI DSS requirements"
+    severity: "critical"
+    framework: "PCI_DSS"
+    documentation: |
+      PCI DSS Requirement 3.4 mandates encryption of cardholder data.
+      Use the @encrypted decorator on functions that store or process card data.
+
+  - name: "pci-scope-marking"
+    description: "Ensures classes handling payment data are marked as PCI scope"
+    check:
+      type: "content-check"
+      pattern: "cloudscope/**/*.py"
+      content-pattern: "@pci_scope"
+      condition: "must-contain-for-classes-with"
+      match-pattern: ".*Payment.*|.*Card.*|.*Credit.*"
+    message: "Classes handling payment data must be marked with @pci_scope decorator"
+    severity: "error"
+    framework: "PCI_DSS"
+
+  - name: "pci-access-control"
+    description: "Ensures payment processing functions have proper access controls"
+    check:
+      type: "content-check"
+      pattern: "cloudscope/**/*.py"
+      content-pattern: "@access_control"
+      condition: "must-contain-for-matches"
+      match-pattern: "def.*(?:process_payment|charge_card|store_card|validate_cvv)"
+    message: "Payment processing functions must include @access_control decorator with appropriate roles"
+    severity: "error"
+    framework: "PCI_DSS"
+
+  # HIPAA Compliance Rules
+  - name: "hipaa-health-data-classification"
+    description: "Ensures health data is properly classified according to HIPAA requirements"
+    check:
+      type: "content-check"
+      pattern: "cloudscope/**/*.py"
+      content-pattern: "@data_classification\\(['\"]health['\"]\\)"
+      condition: "must-contain-for-matches"
+      match-pattern: ".*health.*|.*medical.*|.*patient.*|.*diagnosis.*|.*treatment.*|.*medication.*"
+    message: "Health data must be classified with @data_classification('health') decorator according to HIPAA requirements"
+    severity: "error"
+    framework: "HIPAA"
+
+  - name: "hipaa-audit-logging"
+    description: "Ensures health data access is audit logged for HIPAA compliance"
+    check:
+      type: "content-check"
+      pattern: "cloudscope/**/*.py"
+      content-pattern: "@audit_log"
+      condition: "must-contain-for-matches"
+      match-pattern: "def.*(?:add|update|view|access).*(?:medical|health|patient|diagnosis)"
+    message: "Health data access functions must include @audit_log decorator for HIPAA audit requirements"
+    severity: "error"
+    framework: "HIPAA"
+
+  - name: "hipaa-minimum-necessary"
+    description: "Ensures health data access follows minimum necessary principle"
+    check:
+      type: "content-check"
+      pattern: "cloudscope/**/*.py"
+      content-pattern: "@access_control"
+      condition: "must-contain-for-matches"
+      match-pattern: "def.*(?:get|view|access).*(?:medical|health|patient|record)"
+    message: "Health data access functions must include @access_control decorator to enforce minimum necessary access"
+    severity: "error"
+    framework: "HIPAA"
+
+  # SOC 2 Compliance Rules
+  - name: "soc2-administrative-access-control"
+    description: "Ensures administrative functions have proper access controls"
+    check:
+      type: "content-check"
+      pattern: "cloudscope/**/*.py"
+      content-pattern: "@access_control"
+      condition: "must-contain-for-matches"
+      match-pattern: "def.*(?:delete|admin|config|system|reset|purge|destroy)"
+    message: "Administrative functions must include @access_control decorator with appropriate roles for SOC 2 compliance"
+    severity: "warning"
+    framework: "SOC2"
+
+  - name: "soc2-configuration-audit"
+    description: "Ensures system configuration changes are audit logged"
+    check:
+      type: "content-check"
+      pattern: "cloudscope/**/*.py"
+      content-pattern: "@audit_log"
+      condition: "must-contain-for-matches"
+      match-pattern: "def.*(?:update|set|change).*(?:config|setting|parameter)"
+    message: "Configuration change functions must include @audit_log decorator for SOC 2 audit requirements"
+    severity: "warning"
+    framework: "SOC2"
+
+  # General Security Rules
+  - name: "no-hardcoded-secrets"
+    description: "Prevents hardcoded secrets in source code"
+    check:
+      type: "content-check"
+      pattern: "cloudscope/**/*.py"
+      content-pattern: "(?:password|secret|key|token)\\s*=\\s*['\"][^'\"]{8,}['\"]"
+      condition: "must-not-contain"
+    message: "Hardcoded secrets detected. Use environment variables or secure configuration management instead"
+    severity: "critical"
+    framework: "GENERAL"
+    documentation: |
+      Hardcoded secrets in source code pose a significant security risk.
+      Use environment variables, configuration files, or dedicated secret management systems.
+
+  - name: "encryption-key-management"
+    description: "Ensures proper encryption key management practices"
+    check:
+      type: "content-check"
+      pattern: "cloudscope/**/*.py"
+      content-pattern: "Fernet\\.generate_key\\(\\)"
+      condition: "should-not-contain-in-production"
+    message: "Dynamic key generation should not be used in production code. Use proper key management services"
+    severity: "warning"
+    framework: "GENERAL"
+
+  - name: "compliance-imports"
+    description: "Ensures compliance modules are properly imported when using sensitive data patterns"
+    check:
+      type: "content-check"
+      pattern: "cloudscope/**/*.py"
+      content-pattern: "from cloudscope\\.infrastructure\\.compliance import"
+      condition: "must-contain-for-files-with"
+      match-pattern: "(?:personal|health|payment|card|financial|medical|patient).*data"
+    message: "Files handling sensitive data should import compliance decorators"
+    severity: "info"
+    framework: "GENERAL"
+
+  # Test Coverage Rules
+  - name: "compliance-test-coverage"
+    description: "Ensures compliance-related code has adequate test coverage"
+    check:
+      type: "file-pattern"
+      pattern: "cloudscope/infrastructure/compliance/*.py"
+      requires-corresponding-test: "tests/infrastructure/test_compliance_*.py"
+    message: "Compliance infrastructure code must have corresponding unit tests"
+    severity: "warning"
+    framework: "GENERAL"
+
+  - name: "example-compliance-validation"
+    description: "Ensures compliance examples demonstrate proper usage"
+    check:
+      type: "content-check"
+      pattern: "examples/**/*.py"
+      content-pattern: "@(?:data_classification|encrypted|audit_log|access_control|pci_scope)"
+      condition: "must-contain"
+    message: "Compliance examples must demonstrate proper decorator usage"
+    severity: "info"
+    framework: "GENERAL"
+
+  # Documentation Rules
+  - name: "compliance-documentation"
+    description: "Ensures compliance features are properly documented"
+    check:
+      type: "file-exists"
+      pattern: "docs/COMPLIANCE.md"
+    message: "Compliance documentation must exist at docs/COMPLIANCE.md"
+    severity: "warning"
+    framework: "GENERAL"
+
+  - name: "decorator-documentation"
+    description: "Ensures compliance decorators have proper docstrings"
+    check:
+      type: "content-check"
+      pattern: "cloudscope/infrastructure/compliance/decorators.py"
+      content-pattern: "\"\"\"[\\s\\S]*?Args:[\\s\\S]*?\"\"\"" 
+      condition: "must-contain-for-functions"
+    message: "Compliance decorators must have comprehensive docstrings with Args and Examples sections"
+    severity: "info"
+    framework: "GENERAL"
+
+# Framework-specific rule groups
+framework_rules:
+  GDPR:
+    - "gdpr-personal-data-classification"
+    - "gdpr-audit-logging"
+    - "gdpr-data-export-method"
+  
+  PCI_DSS:
+    - "pci-card-data-encryption"
+    - "pci-scope-marking"
+    - "pci-access-control"
+  
+  HIPAA:
+    - "hipaa-health-data-classification"
+    - "hipaa-audit-logging"
+    - "hipaa-minimum-necessary"
+  
+  SOC2:
+    - "soc2-administrative-access-control"
+    - "soc2-configuration-audit"
+
+# Severity levels and their meanings
+severity_levels:
+  critical:
+    description: "Immediate compliance violation that could result in regulatory penalties"
+    action: "Block deployment and require immediate fix"
+    examples: ["Unencrypted card data", "Hardcoded secrets"]
+  
+  error:
+    description: "Significant compliance issue that must be addressed"
+    action: "Require fix before merge"
+    examples: ["Missing data classification", "Unaudited personal data access"]
+  
+  warning:
+    description: "Compliance best practice that should be followed"
+    action: "Flag for review but allow merge"
+    examples: ["Missing access controls on admin functions"]
+  
+  info:
+    description: "Informational compliance guidance"
+    action: "Provide guidance but no blocking"
+    examples: ["Documentation suggestions", "Import recommendations"]
+
+# CI/CD Integration settings
+ci_integration:
+  on_pull_request:
+    - run_all_rules: true
+    - fail_on_critical: true
+    - fail_on_error: true
+    - comment_on_pr: true
+  
+  on_push_to_main:
+    - run_all_rules: true
+    - fail_on_critical: true
+    - fail_on_error: false
+    - generate_report: true
+  
+  nightly_scan:
+    - run_all_rules: true
+    - include_warnings: true
+    - generate_detailed_report: true
+    - send_to_compliance_team: true
+
+# Exclusions and exceptions
+exclusions:
+  paths:
+    - "tests/**/*"
+    - "docs/**/*"
+    - "__pycache__/**/*"
+    - ".git/**/*"
+    - "*.pyc"
+  
+  test_files:
+    - "test_*.py"
+    - "*_test.py"
+  
+  temporary_exceptions:
+    # Format: "rule_name": ["file_pattern", "expiry_date", "justification"]
+    example_exception:
+      - "gdpr-personal-data-classification"
+      - "legacy/old_user_model.py"
+      - "2025-12-31"
+      - "Legacy code to be refactored in Q4 2025"
