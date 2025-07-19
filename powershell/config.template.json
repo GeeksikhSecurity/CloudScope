@@ -1,0 +1,264 @@
+{
+  "cloudScope": {
+    "version": "1.0.0",
+    "environment": "Production",
+    "defaultFramework": "GDPR"
+  },
+  
+  "azure": {
+    "tenantId": "YOUR-TENANT-ID",
+    "subscriptionId": "YOUR-SUBSCRIPTION-ID",
+    "location": "eastus",
+    "resourceGroups": {
+      "monitoring": "rg-cloudscope-monitoring",
+      "security": "rg-cloudscope-security",
+      "automation": "rg-cloudscope-automation"
+    }
+  },
+  
+  "authentication": {
+    "method": "Interactive",
+    "servicePrincipal": {
+      "applicationId": "",
+      "certificateThumbprint": "",
+      "secretKey": ""
+    },
+    "managedIdentity": {
+      "enabled": false,
+      "clientId": ""
+    }
+  },
+  
+  "microsoftGraph": {
+    "apiVersion": "v1.0",
+    "environment": "Production",
+    "scopes": [
+      "User.Read.All",
+      "Group.Read.All",
+      "Directory.Read.All",
+      "InformationProtectionPolicy.Read",
+      "InformationProtectionContent.Write",
+      "SecurityEvents.Read.All",
+      "SecurityActions.ReadWrite.All",
+      "AuditLog.Read.All",
+      "DataLossPreventionPolicy.Manage",
+      "SensitivityLabel.Read.All",
+      "ThreatIndicators.ReadWrite.OwnedBy",
+      "ComplianceManager.Read.All"
+    ]
+  },
+  
+  "compliance": {
+    "frameworks": {
+      "GDPR": {
+        "enabled": true,
+        "lawfulBasis": "Legitimate Interest",
+        "retentionDays": 365,
+        "pseudonymization": false,
+        "encryptionRequired": true
+      },
+      "PCI_DSS": {
+        "enabled": true,
+        "panMasking": true,
+        "tokenization": false,
+        "keyRotationDays": 90,
+        "networkSegmentation": true
+      },
+      "HIPAA": {
+        "enabled": true,
+        "minimumNecessary": true,
+        "deIdentification": false,
+        "auditRetentionYears": 6,
+        "encryptionAlgorithm": "AES256"
+      },
+      "SOC2": {
+        "enabled": true,
+        "trustServiceCriteria": ["Security", "Availability", "Confidentiality"],
+        "continuousMonitoring": true,
+        "accessReviewDays": 90
+      }
+    },
+    
+    "dataClassification": {
+      "enableAutoClassification": true,
+      "scanInterval": "Daily",
+      "sensitiveInfoTypes": {
+        "creditCard": {
+          "enabled": true,
+          "patterns": ["\\b(?:4[0-9]{12}(?:[0-9]{3})?|5[1-5][0-9]{14})\\b"]
+        },
+        "ssn": {
+          "enabled": true,
+          "patterns": ["\\b\\d{3}-\\d{2}-\\d{4}\\b"]
+        },
+        "email": {
+          "enabled": true,
+          "patterns": ["\\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Z|a-z]{2,}\\b"]
+        }
+      },
+      "labels": {
+        "Public": { "color": "Green", "encryption": false },
+        "Internal": { "color": "Yellow", "encryption": false },
+        "Confidential": { "color": "Orange", "encryption": true },
+        "Personal": { "color": "Red", "encryption": true },
+        "Health": { "color": "Red", "encryption": true },
+        "Financial": { "color": "Red", "encryption": true },
+        "Payment": { "color": "Red", "encryption": true }
+      }
+    }
+  },
+  
+  "monitoring": {
+    "enabled": true,
+    "logAnalytics": {
+      "workspaceName": "CloudScope-LogAnalytics",
+      "retentionDays": 90,
+      "dailyCapGB": 1
+    },
+    "applicationInsights": {
+      "name": "CloudScope-AppInsights",
+      "samplingPercentage": 100
+    },
+    "alerts": {
+      "complianceScore": {
+        "enabled": true,
+        "threshold": 80,
+        "operator": "LessThan",
+        "severity": "Warning",
+        "frequency": "PT5M"
+      },
+      "violationCount": {
+        "enabled": true,
+        "threshold": 10,
+        "operator": "GreaterThan",
+        "severity": "Error",
+        "frequency": "PT5M"
+      },
+      "failedOperations": {
+        "enabled": true,
+        "threshold": 5,
+        "operator": "GreaterThan",
+        "severity": "Critical",
+        "frequency": "PT5M"
+      },
+      "dataAccessAnomaly": {
+        "enabled": true,
+        "threshold": 100,
+        "operator": "GreaterThan",
+        "severity": "Warning",
+        "frequency": "PT15M"
+      }
+    },
+    "notifications": {
+      "email": {
+        "enabled": true,
+        "recipients": ["compliance@yourcompany.com"],
+        "criticalOnly": false
+      },
+      "teams": {
+        "enabled": false,
+        "webhookUrl": ""
+      },
+      "slack": {
+        "enabled": false,
+        "webhookUrl": ""
+      }
+    }
+  },
+  
+  "security": {
+    "keyVault": {
+      "name": "kv-cloudscope-prod",
+      "enableSoftDelete": true,
+      "enablePurgeProtection": true,
+      "retentionDays": 90
+    },
+    "encryption": {
+      "algorithm": "RSA-OAEP-256",
+      "keySize": 2048,
+      "rotationDays": 90
+    },
+    "network": {
+      "allowedIPs": [],
+      "serviceEndpoints": ["Microsoft.Storage", "Microsoft.KeyVault"],
+      "privateEndpoints": false
+    }
+  },
+  
+  "reporting": {
+    "powerBI": {
+      "enabled": true,
+      "workspaceName": "CloudScope Compliance",
+      "datasetName": "CloudScope_Compliance_Data",
+      "refreshSchedule": "Daily"
+    },
+    "formats": {
+      "html": { "enabled": true, "includeCharts": true },
+      "pdf": { "enabled": true, "includeEvidence": false },
+      "excel": { "enabled": true, "includeRawData": false }
+    },
+    "scheduling": {
+      "dailyCheck": {
+        "enabled": true,
+        "time": "08:00",
+        "frameworks": ["GDPR", "PCI_DSS", "HIPAA", "SOC2"]
+      },
+      "weeklyReport": {
+        "enabled": true,
+        "dayOfWeek": "Monday",
+        "time": "09:00",
+        "recipients": ["compliance@yourcompany.com", "security@yourcompany.com"]
+      },
+      "monthlyAssessment": {
+        "enabled": true,
+        "dayOfMonth": 1,
+        "time": "10:00",
+        "includeRemediation": true
+      }
+    }
+  },
+  
+  "automation": {
+    "enabled": true,
+    "automationAccount": "CloudScope-Automation",
+    "runbooks": {
+      "complianceMonitoring": {
+        "enabled": true,
+        "schedule": "Hourly"
+      },
+      "autoRemediation": {
+        "enabled": false,
+        "requireApproval": true,
+        "approvers": ["admin@yourcompany.com"]
+      }
+    },
+    "logicApps": {
+      "enabled": false,
+      "workflows": []
+    }
+  },
+  
+  "advanced": {
+    "caching": {
+      "enabled": true,
+      "ttlMinutes": 30
+    },
+    "parallelProcessing": {
+      "enabled": true,
+      "maxThreads": 4
+    },
+    "retryPolicy": {
+      "maxAttempts": 3,
+      "backoffMultiplier": 2
+    },
+    "logging": {
+      "level": "Information",
+      "retentionDays": 30,
+      "includePersonalData": false
+    },
+    "performance": {
+      "batchSize": 100,
+      "timeoutSeconds": 300
+    }
+  }
+}

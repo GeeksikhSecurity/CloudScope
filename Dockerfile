@@ -1,80 +1,75 @@
-# Multi-stage build for CloudScope API
+# Multi-stage Dockerfile for CloudScope
+# Requirements: 2.1, 2.3, 2.4
+
+# Stage 1: Builder
 FROM python:3.11-slim as builder
 
-# Set build arguments
-ARG BUILD_DATE
-ARG VCS_REF
-ARG VERSION=1.0.0
-
-# Add metadata labels
-LABEL maintainer="CloudScope Community <community@cloudscope.io>" \
-      org.opencontainers.image.title="CloudScope API" \
-      org.opencontainers.image.description="Open Source Unified Asset Inventory API" \
-      org.opencontainers.image.version=$VERSION \
-      org.opencontainers.image.created=$BUILD_DATE \
-      org.opencontainers.image.revision=$VCS_REF \
-      org.opencontainers.image.source="https://github.com/GeeksikhSecurity/CloudScope" \
-      org.opencontainers.image.url="https://cloudscope.io" \
-      org.opencontainers.image.vendor="CloudScope Community" \
-      org.opencontainers.image.licenses="Apache-2.0"
-
-# Install system dependencies for building
+# Install build dependencies
 RUN apt-get update && apt-get install -y \
-    build-essential \
-    curl \
+    gcc \
+    g++ \
     git \
     && rm -rf /var/lib/apt/lists/*
 
-# Create app directory
-WORKDIR /app
+# Set working directory
+WORKDIR /build
 
-# Copy and install Python dependencies
+# Copy requirements first for better caching
 COPY requirements.txt .
-RUN pip install --no-cache-dir --user -r requirements.txt
+COPY requirements-dev.txt .
 
-# Production stage
+# Create virtual environment and install dependencies
+RUN python -m venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+RUN pip install --upgrade pip setuptools wheel
+RUN pip install -r requirements.txt
+
+# Copy source code
+COPY . .
+
+# Build the package
+RUN pip install -e .
+
+# Stage 2: Runtime
 FROM python:3.11-slim
+
+# Security: Create non-root user
+RUN useradd -r -s /bin/false -u 1000 cloudscope && \
+    mkdir -p /app /data /logs /config /plugins && \
+    chown -R cloudscope:cloudscope /app /data /logs /config /plugins
 
 # Install runtime dependencies
 RUN apt-get update && apt-get install -y \
     curl \
-    ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
-# Create non-root user for security
-RUN groupadd -r cloudscope && useradd -r -g cloudscope cloudscope
+# Copy virtual environment from builder
+COPY --from=builder /opt/venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
 
-# Create app directory and set ownership
+# Copy application
 WORKDIR /app
-RUN chown cloudscope:cloudscope /app
-
-# Copy Python packages from builder stage
-COPY --from=builder /root/.local /home/cloudscope/.local
-
-# Copy application code
-COPY --chown=cloudscope:cloudscope . /app
-
-# Create necessary directories
-RUN mkdir -p /app/logs /app/exports /app/config && \
-    chown -R cloudscope:cloudscope /app/logs /app/exports /app/config
+COPY --from=builder /build/src ./src
+COPY --from=builder /build/scripts ./scripts
+COPY --from=builder /build/config ./config
+COPY --from=builder /build/README.md ./
 
 # Set environment variables
-ENV PATH=/home/cloudscope/.local/bin:$PATH \
-    PYTHONPATH=/app \
-    PYTHONUNBUFFERED=1 \
-    PYTHONDONTWRITEBYTECODE=1 \
-    USER=cloudscope \
-    HOME=/home/cloudscope
+ENV PYTHONUNBUFFERED=1
+ENV CLOUDSCOPE_DATA_DIR=/data
+ENV CLOUDSCOPE_LOG_DIR=/logs
+ENV CLOUDSCOPE_CONFIG_DIR=/config
+ENV CLOUDSCOPE_PLUGIN_DIR=/plugins
 
 # Switch to non-root user
 USER cloudscope
 
-# Expose port
-EXPOSE 8000
-
 # Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
-  CMD curl -f http://localhost:8000/health || exit 1
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD cloudscope health --format json || exit 1
 
-# Start application
-CMD ["uvicorn", "core.api.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "1"]
+# Expose metrics port
+EXPOSE 8080
+
+# Default command
+CMD ["cloudscope", "--config", "/config/cloudscope-config.json", "serve"]

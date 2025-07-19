@@ -1,10 +1,12 @@
-# CloudScope .gitignore
-
-# Python
+# Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
 *$py.class
+
+# C extensions
 *.so
+
+# Distribution / packaging
 .Python
 build/
 develop-eggs/
@@ -18,6 +20,7 @@ parts/
 sdist/
 var/
 wheels/
+pip-wheel-metadata/
 share/python-wheels/
 *.egg-info/
 .installed.cfg
@@ -27,6 +30,10 @@ MANIFEST
 # PyInstaller
 *.manifest
 *.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
 
 # Unit test / coverage reports
 htmlcov/
@@ -41,113 +48,29 @@ coverage.xml
 *.py,cover
 .hypothesis/
 .pytest_cache/
-cover/
 
-# Virtual environments
-.env
-.venv
-env/
-venv/
-ENV/
-env.bak/
-venv.bak/
+# Translations
+*.mo
+*.pot
 
-# IDEs
-.vscode/
-.idea/
-*.swp
-*.swo
-*~
-
-# OS
-.DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
-Thumbs.db
-
-# Logs
-logs/
+# Django stuff:
 *.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
 
-# Configuration files with secrets
-config/cloudscope-config.json
-config/m365-config.json
-config/*-config.json
-!config/*.example.json
+# Flask stuff:
+instance/
+.webassets-cache
 
-# Environment variables
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
+# Scrapy stuff:
+.scrapy
 
-# Database
-*.db
-*.sqlite3
-*.db-journal
-
-# Output directories
-output/
-exports/
-backups/
-temp/
-tmp/
-
-# Docker
-docker-compose.override.yml
-.dockerignore
-
-# Kubernetes
-*.secret.yaml
-*-secret.yaml
-
-# Security files
-*.pem
-*.key
-*.crt
-*.p12
-*.pfx
-certificates/
-keys/
-secrets/
-
-# PowerShell
-*.ps1xml
-
-# Node.js (for future web UI)
-node_modules/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-.pnpm-debug.log*
-
-# Next.js (for future web UI)
-.next/
-out/
-
-# Nuxt.js (for future web UI)
-.nuxt
-dist
-
-# Test results
-test-results/
-coverage/
-.nyc_output
-
-# Performance data
-*.cpuprofile
-*.heapprofile
-*.heapsnapshot
-
-# Documentation builds
-site/
+# Sphinx documentation
 docs/_build/
+
+# PyBuilder
+target/
 
 # Jupyter Notebook
 .ipynb_checkpoints
@@ -156,12 +79,30 @@ docs/_build/
 profile_default/
 ipython_config.py
 
-# Celery
+# pyenv
+.python-version
+
+# pipenv
+Pipfile.lock
+
+# PEP 582
+__pypackages__/
+
+# Celery stuff
 celerybeat-schedule
 celerybeat.pid
 
 # SageMath parsed files
 *.sage.py
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
 
 # Spyder project settings
 .spyderproject
@@ -169,6 +110,9 @@ celerybeat.pid
 
 # Rope project settings
 .ropeproject
+
+# mkdocs documentation
+/site
 
 # mypy
 .mypy_cache/
@@ -178,25 +122,39 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
-# pytype static type analyzer
-.pytype/
-
-# Cython debug symbols
-cython_debug/
-
-# PyCharm
-#  JetBrains specific template is maintained in a separate JetBrains.gitignore that can
-#  be added to the global gitignore or merged into this project gitignore.  For a PyCharm
-#  project, it is usually recommended to add the following:
-*.idea/
-
-# Security scanner results
-bandit-report.json
-safety-report.json
-semgrep-report.json
-trivy-results.sarif
-pip-audit-report.json
-
 # CloudScope specific
-cloudscope-sbom.spdx.json
-security-summary.md
+/data/
+/reports/
+/logs/
+/plugins/*
+!/plugins/.gitkeep
+/config/cloudscope-config.json
+/config/.backups/
+*.db
+*.sqlite
+*.sqlite3
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.temp
+.tmp/
+/tmp/
+
+# Backup files
+*.bak
+*.backup
+*.old
+
+# CloudScope fallback storage
+/fallback/

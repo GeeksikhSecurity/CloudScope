@@ -1,234 +1,112 @@
 version: '3.8'
 
 services:
-  # Memgraph Database
-  memgraph:
-    image: memgraph/memgraph:latest
-    container_name: cloudscope-memgraph
-    ports:
-      - "7687:7687"
-      - "7444:7444"
-    environment:
-      - MEMGRAPH_USER=cloudscope
-      - MEMGRAPH_PASSWORD=${MEMGRAPH_PASSWORD:-cloudscope123}
-    volumes:
-      - memgraph_data:/var/lib/memgraph
-      - memgraph_log:/var/log/memgraph
-      - memgraph_etc:/etc/memgraph
-    networks:
-      - cloudscope-network
+  cloudscope:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: cloudscope:latest
+    container_name: cloudscope
     restart: unless-stopped
+    ports:
+      - "8080:8080"  # Metrics/API port
+    environment:
+      - CLOUDSCOPE_LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - CLOUDSCOPE_STORAGE_TYPE=${STORAGE_TYPE:-sqlite}
+      # Cloud provider credentials (optional)
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - AZURE_TENANT_ID=${AZURE_TENANT_ID}
+      - AZURE_CLIENT_ID=${AZURE_CLIENT_ID}
+      - AZURE_CLIENT_SECRET=${AZURE_CLIENT_SECRET}
+      - GCP_SERVICE_ACCOUNT_KEY=${GCP_SERVICE_ACCOUNT_KEY}
+      # Integration credentials (optional)
+      - SLACK_WEBHOOK_URL=${SLACK_WEBHOOK_URL}
+      - JIRA_URL=${JIRA_URL}
+      - JIRA_API_TOKEN=${JIRA_API_TOKEN}
+    volumes:
+      - ./data:/data
+      - ./logs:/logs
+      - ./config:/config
+      - ./plugins:/plugins
+      - ./reports:/reports
     healthcheck:
-      test: ["CMD-SHELL", "echo 'MATCH (n) RETURN count(n);' | mgconsole || exit 1"]
+      test: ["CMD", "cloudscope", "health", "--format", "json"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 30s
-
-  # PostgreSQL for metadata
-  postgres:
-    image: postgres:15-alpine
-    container_name: cloudscope-postgres
-    environment:
-      - POSTGRES_DB=cloudscope
-      - POSTGRES_USER=cloudscope
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-cloudscope123}
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-      - ./scripts/init-postgres.sql:/docker-entrypoint-initdb.d/init.sql
     networks:
       - cloudscope-network
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U cloudscope"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
 
-  # Redis Cache
-  redis:
-    image: redis:7-alpine
-    container_name: cloudscope-redis
-    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-cloudscope123}
-    volumes:
-      - redis_data:/data
-    networks:
-      - cloudscope-network
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-
-  # CloudScope API
-  api:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: cloudscope-api
-    ports:
-      - "8000:8000"
-    environment:
-      - DEBUG=false
-      - LOG_LEVEL=INFO
-      - MEMGRAPH_HOST=memgraph
-      - POSTGRES_HOST=postgres
-      - REDIS_HOST=redis
-      - JWT_SECRET_KEY=${JWT_SECRET_KEY:-change-this-in-production}
-      - MEMGRAPH_PASSWORD=${MEMGRAPH_PASSWORD:-cloudscope123}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-cloudscope123}
-      - REDIS_PASSWORD=${REDIS_PASSWORD:-cloudscope123}
-    depends_on:
-      memgraph:
-        condition: service_healthy
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-    volumes:
-      - ./config:/app/config:ro
-      - ./logs:/app/logs
-      - ./exports:/app/exports
-    networks:
-      - cloudscope-network
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 60s
-
-  # Web UI (Future implementation)
-  web:
-    image: nginx:alpine
-    container_name: cloudscope-web
-    ports:
-      - "3000:80"
-    volumes:
-      - ./web-ui/dist:/usr/share/nginx/html:ro
-      - ./web-ui/nginx.conf:/etc/nginx/nginx.conf:ro
-    depends_on:
-      - api
-    networks:
-      - cloudscope-network
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost/"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-
-  # Elasticsearch for logging and search
-  elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:8.11.0
-    container_name: cloudscope-elasticsearch
-    environment:
-      - discovery.type=single-node
-      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
-      - xpack.security.enabled=false
-      - xpack.security.enrollment.enabled=false
-    volumes:
-      - elasticsearch_data:/usr/share/elasticsearch/data
-    networks:
-      - cloudscope-network
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:9200/_cluster/health || exit 1"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-
-  # Kibana for log visualization
-  kibana:
-    image: docker.elastic.co/kibana/kibana:8.11.0
-    container_name: cloudscope-kibana
-    ports:
-      - "5601:5601"
-    environment:
-      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
-      - ELASTICSEARCH_USERNAME=""
-      - ELASTICSEARCH_PASSWORD=""
-    depends_on:
-      elasticsearch:
-        condition: service_healthy
-    networks:
-      - cloudscope-network
-    restart: unless-stopped
-
-  # Grafana for dashboards
-  grafana:
-    image: grafana/grafana:latest
-    container_name: cloudscope-grafana
-    ports:
-      - "3001:3000"
-    environment:
-      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-admin123}
-      - GF_SECURITY_ADMIN_USER=admin
-      - GF_INSTALL_PLUGINS=grafana-piechart-panel
-    volumes:
-      - grafana_data:/var/lib/grafana
-      - ./grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
-      - ./grafana/datasources:/etc/grafana/provisioning/datasources:ro
-    networks:
-      - cloudscope-network
-    restart: unless-stopped
-
-  # Prometheus for metrics collection
+  # Optional: Prometheus for metrics collection
   prometheus:
     image: prom/prometheus:latest
     container_name: cloudscope-prometheus
+    restart: unless-stopped
     ports:
       - "9090:9090"
     volumes:
-      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
-      - prometheus_data:/prometheus
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
       - '--storage.tsdb.path=/prometheus'
-      - '--web.console.libraries=/etc/prometheus/console_libraries'
-      - '--web.console.templates=/etc/prometheus/consoles'
-      - '--storage.tsdb.retention.time=200h'
-      - '--web.enable-lifecycle'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
     networks:
       - cloudscope-network
-    restart: unless-stopped
+    depends_on:
+      - cloudscope
 
-  # Jaeger for distributed tracing
-  jaeger:
-    image: jaegertracing/all-in-one:latest
-    container_name: cloudscope-jaeger
+  # Optional: Grafana for visualization
+  grafana:
+    image: grafana/grafana:latest
+    container_name: cloudscope-grafana
+    restart: unless-stopped
     ports:
-      - "16686:16686"
-      - "14268:14268"
+      - "3000:3000"
     environment:
-      - COLLECTOR_OTLP_ENABLED=true
+      - GF_SECURITY_ADMIN_USER=${GRAFANA_USER:-admin}
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-admin}
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
     networks:
       - cloudscope-network
-    restart: unless-stopped
+    depends_on:
+      - prometheus
 
-volumes:
-  memgraph_data:
-    driver: local
-  memgraph_log:
-    driver: local
-  memgraph_etc:
-    driver: local
-  postgres_data:
-    driver: local
-  redis_data:
-    driver: local
-  elasticsearch_data:
-    driver: local
-  grafana_data:
-    driver: local
-  prometheus_data:
-    driver: local
+  # Optional: Memgraph for graph database storage
+  memgraph:
+    image: memgraph/memgraph:latest
+    container_name: cloudscope-memgraph
+    restart: unless-stopped
+    ports:
+      - "7687:7687"  # Bolt protocol
+      - "3001:3000"  # Memgraph Lab
+    environment:
+      - MEMGRAPH_USER=${MEMGRAPH_USER:-memgraph}
+      - MEMGRAPH_PASSWORD=${MEMGRAPH_PASSWORD:-memgraph}
+    volumes:
+      - memgraph-data:/var/lib/memgraph
+      - memgraph-logs:/var/log/memgraph
+    networks:
+      - cloudscope-network
+    profiles:
+      - graph
 
 networks:
   cloudscope-network:
     driver: bridge
-    ipam:
-      config:
-        - subnet: 172.20.0.0/16
+
+volumes:
+  prometheus-data:
+    driver: local
+  grafana-data:
+    driver: local
+  memgraph-data:
+    driver: local
+  memgraph-logs:
+    driver: local

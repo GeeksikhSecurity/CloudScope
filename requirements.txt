@@ -1,105 +1,38 @@
-# CloudScope - Open Source Unified Asset Inventory
+# CloudScope Dependencies
 
-# Core Dependencies
-fastapi==0.104.1
-uvicorn[standard]==0.24.0
-pydantic==2.5.0
-python-multipart==0.0.6
+# Core dependencies
+pydantic>=2.0.0
+python-dateutil>=2.8.2
+dataclasses-json>=0.6.0
 
-# Database and Caching
-gqlalchemy==1.4.0  # Memgraph OGM
-redis==5.0.1
-asyncpg==0.29.0
-psycopg2-binary==2.9.9
+# Compliance and security
+cryptography>=41.0.0
+PyJWT>=2.8.0
 
-# Security and Authentication
-python-jose[cryptography]==3.3.0
-passlib[bcrypt]==1.7.4
-python-multipart==0.0.6
-cryptography==41.0.8
+# CLI and configuration
+click>=8.1.0
+PyYAML>=6.0.1
+argparse>=1.4.0
 
-# HTTP Client and API
-httpx==0.25.2
-aiohttp==3.9.1
-requests==2.31.0
+# Logging and monitoring
+structlog>=23.1.0
+opentelemetry-api>=1.20.0
+opentelemetry-sdk>=1.20.0
 
-# Data Processing and Analysis
-pandas==2.1.4
-numpy==1.24.4
-python-dateutil==2.8.2
+# Development and testing
+pytest>=7.4.0
+pytest-cov>=4.1.0
+pytest-mock>=3.11.0
+black>=23.7.0
+flake8>=6.0.0
+mypy>=1.5.0
+pre-commit>=3.3.0
 
-# Graph and Analytics
-strawberry-graphql[fastapi]==0.209.5
-networkx==3.2.1
+# Optional dependencies for enhanced features
+neo4j>=5.12.0  # For Memgraph adapter (optional)
+boto3>=1.28.0  # For AWS integration (optional)
+azure-identity>=1.14.0  # For Azure integration (optional)
+google-cloud-core>=2.3.0  # For GCP integration (optional)
 
-# Monitoring and Observability
-prometheus-client==0.19.0
-opentelemetry-api==1.21.0
-opentelemetry-sdk==1.21.0
-opentelemetry-instrumentation-fastapi==0.42b0
-opentelemetry-exporter-jaeger==1.21.0
-
-# Utilities
-python-dotenv==1.0.0
-click==8.1.7
-rich==13.7.0
-typer==0.9.0
-
-# Testing (for development)
-pytest==7.4.3
-pytest-asyncio==0.21.1
-pytest-cov==4.1.0
-httpx==0.25.2
-testcontainers==3.7.1
-
-# Code Quality (for development)
-black==23.11.0
-isort==5.12.0
-flake8==6.1.0
-mypy==1.7.1
-pre-commit==3.6.0
-
-# Documentation (for development)
-mkdocs==1.5.3
-mkdocs-material==9.4.8
-mkdocs-swagger-ui-tag==0.6.8
-
-# Cloud SDKs for collectors
-azure-identity==1.15.0
-azure-mgmt-resource==23.1.0
-azure-mgmt-compute==30.3.0
-azure-mgmt-storage==21.0.0
-azure-mgmt-network==25.2.0
-boto3==1.34.0
-botocore==1.34.0
-google-cloud-asset==3.21.0
-google-cloud-compute==1.15.0
-
-# PowerShell integration (for Windows environments)
-# These are optional and only needed if running PowerShell collectors from Python
-# powershell-kernel==0.1.3  # Uncomment if needed
-
-# Export formats
-openpyxl==3.1.2
-xlsxwriter==3.1.9
-
-# Async utilities
-asyncio-mqtt==0.16.1
-celery==5.3.4
-redis==5.0.1
-
-# Configuration management
-pyyaml==6.0.1
-jsonschema==4.20.0
-
-# Logging and debugging
-loguru==0.7.2
-structlog==23.2.0
-
-# Performance monitoring
-psutil==5.9.6
-memory-profiler==0.61.0
-
-# Development tools
-ipython==8.17.2
-jupyter==1.0.0
+# Kiro workflow dependencies  
+kiro>=0.1.0  # Workflow automation (if available)

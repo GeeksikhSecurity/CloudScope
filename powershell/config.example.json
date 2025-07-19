@@ -1,0 +1,206 @@
+{
+    "Environment": "Production",
+    "AzureSubscriptionId": "12345678-1234-1234-1234-123456789012",
+    "TenantId": "87654321-4321-4321-4321-210987654321",
+    "ResourceGroup": "rg-cloudscope-prod",
+    "AutomationAccount": "cloudscope-prod-automation",
+    "KeyVaultName": "cloudscope-prod-kv",
+    "LogAnalyticsWorkspace": "cloudscope-prod-logs",
+    "AppInsightsName": "cloudscope-prod-appinsights",
+    "StorageAccount": "cloudscopeprodstore",
+    "ComplianceOfficerEmail": "compliance@yourcompany.com",
+    
+    "ComplianceSettings": {
+        "DefaultFramework": "GDPR",
+        "EnableAutomaticRemediation": false,
+        "AlertingEnabled": true,
+        "MonitoringIntervalSeconds": 300,
+        "DataRetentionDays": 365
+    },
+    
+    "Frameworks": {
+        "GDPR": {
+            "Enabled": true,
+            "LawfulBasis": "Legitimate Interest",
+            "RetentionDays": 365,
+            "EnablePseudonymization": true,
+            "DataSubjectRequestEmail": "privacy@yourcompany.com"
+        },
+        "PCI_DSS": {
+            "Enabled": true,
+            "EnablePANMasking": true,
+            "EnableTokenization": false,
+            "KeyRotationDays": 90,
+            "NetworkSegmentation": "Enabled"
+        },
+        "HIPAA": {
+            "Enabled": true,
+            "EnableMinimumNecessary": true,
+            "EnableDeIdentification": false,
+            "AuditRetentionYears": 6,
+            "PrivacyOfficerEmail": "privacy@yourcompany.com"
+        },
+        "SOC2": {
+            "Enabled": true,
+            "TrustServiceCriteria": ["Security", "Availability", "Confidentiality"],
+            "EnableContinuousMonitoring": true,
+            "AccessReviewDays": 90
+        }
+    },
+    
+    "DataClassification": {
+        "EnableAutoClassification": true,
+        "ScanSchedule": "0 2 * * *",
+        "ClassificationRules": {
+            "CreditCard": {
+                "Pattern": "\\b(?:4[0-9]{12}(?:[0-9]{3})?|5[1-5][0-9]{14}|3[47][0-9]{13})\\b",
+                "Classification": "Payment",
+                "Confidence": 0.9
+            },
+            "SSN": {
+                "Pattern": "\\b\\d{3}-\\d{2}-\\d{4}\\b",
+                "Classification": "Personal",
+                "Confidence": 0.85
+            },
+            "Email": {
+                "Pattern": "\\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Z|a-z]{2,}\\b",
+                "Classification": "Personal",
+                "Confidence": 0.8
+            }
+        }
+    },
+    
+    "Monitoring": {
+        "Enabled": true,
+        "MetricsRetentionDays": 90,
+        "AlertRules": {
+            "ComplianceScore": {
+                "Threshold": 85,
+                "Operator": "LessThan",
+                "Severity": "Warning",
+                "Enabled": true
+            },
+            "ViolationCount": {
+                "Threshold": 10,
+                "Operator": "GreaterThan",
+                "Severity": "Error",
+                "Enabled": true
+            },
+            "FailedOperations": {
+                "Threshold": 5,
+                "Operator": "GreaterThan",
+                "Severity": "Critical",
+                "Enabled": true
+            },
+            "UnauthorizedAccess": {
+                "Threshold": 1,
+                "Operator": "GreaterThanOrEqual",
+                "Severity": "Critical",
+                "Enabled": true
+            }
+        },
+        "NotificationChannels": {
+            "Email": {
+                "Enabled": true,
+                "Recipients": ["compliance@yourcompany.com", "security@yourcompany.com"],
+                "SmtpServer": "smtp.office365.com",
+                "SmtpPort": 587,
+                "UseSsl": true
+            },
+            "Teams": {
+                "Enabled": false,
+                "WebhookUrl": "https://outlook.office.com/webhook/..."
+            },
+            "Slack": {
+                "Enabled": false,
+                "WebhookUrl": "https://hooks.slack.com/services/..."
+            }
+        }
+    },
+    
+    "Reporting": {
+        "PowerBIWorkspace": "CloudScope Compliance",
+        "ReportSchedules": {
+            "DailyCompliance": {
+                "Enabled": true,
+                "Schedule": "0 6 * * *",
+                "Recipients": ["management@yourcompany.com"],
+                "Format": "PDF"
+            },
+            "WeeklyExecutiveSummary": {
+                "Enabled": true,
+                "Schedule": "0 9 * * 1",
+                "Recipients": ["executives@yourcompany.com"],
+                "Format": "HTML"
+            },
+            "MonthlyDetailed": {
+                "Enabled": true,
+                "Schedule": "0 9 1 * *",
+                "Recipients": ["compliance@yourcompany.com"],
+                "Format": "Excel"
+            }
+        }
+    },
+    
+    "Remediation": {
+        "AutoRemediationEnabled": false,
+        "RequireApproval": true,
+        "ApprovalEmail": "it-security@yourcompany.com",
+        "RemediationPolicies": {
+            "DormantAccounts": {
+                "Enabled": true,
+                "DaysInactive": 90,
+                "Action": "Disable"
+            },
+            "UnclassifiedData": {
+                "Enabled": true,
+                "DefaultClassification": "Internal",
+                "NotifyOwner": true
+            },
+            "WeakPasswords": {
+                "Enabled": true,
+                "Action": "ForceReset",
+                "NotifyUser": true
+            }
+        }
+    },
+    
+    "Integration": {
+        "ServiceNow": {
+            "Enabled": false,
+            "InstanceUrl": "https://yourinstance.service-now.com",
+            "Username": "",
+            "PasswordKeyVaultSecret": "ServiceNowPassword"
+        },
+        "Jira": {
+            "Enabled": false,
+            "ServerUrl": "https://yourcompany.atlassian.net",
+            "Username": "",
+            "ApiTokenKeyVaultSecret": "JiraApiToken"
+        },
+        "Splunk": {
+            "Enabled": false,
+            "ServerUrl": "https://splunk.yourcompany.com:8089",
+            "ApiTokenKeyVaultSecret": "SplunkApiToken"
+        }
+    },
+    
+    "Advanced": {
+        "ParallelProcessing": true,
+        "MaxConcurrentJobs": 5,
+        "TimeoutMinutes": 30,
+        "RetryCount": 3,
+        "LogLevel": "Information",
+        "EnableDebugMode": false,
+        "CacheExpirationMinutes": 30
+    },
+    
+    "Modules": {
+        "Microsoft.Graph": "2.0.0",
+        "Az.Accounts": "2.10.0",
+        "Az.KeyVault": "4.0.0",
+        "Az.Monitor": "4.0.0"
+    },
+    
+    "SetupDate": "2025-01-01T00:00:00Z"
+}

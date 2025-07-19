@@ -1,0 +1,119 @@
+# CloudScope PowerShell .gitignore
+
+# PowerShell specific
+*.ps1xml
+*.psc1
+*.pssc
+*.psd1.bak
+*.psm1.bak
+
+# Module packaging
+*.nupkg
+*.zip
+Output/
+Release/
+Package/
+
+# Test results
+TestResults/
+*.xml
+coverage/
+*.coverage
+
+# Logs
+*.log
+Logs/
+CloudScope-*.log
+CloudScope_Audit_*.log
+
+# Configuration files with secrets
+config.json
+*.secret.json
+*.private.json
+appsettings.json
+local.settings.json
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Azure specific
+*.azureauth
+.azure/
+local.settings.json
+ServiceDependencies/
+*.PublishSettings
+
+# DSC
+*.mof
+*.mof.checksum
+DSCResource.Tests/
+
+# Temporary files
+temp/
+tmp/
+*.tmp
+*.temp
+*.cache
+
+# OS specific
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# IDE specific
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Build artifacts
+artifacts/
+bin/
+obj/
+out/
+
+# PowerShell Gallery
+.psgallery/
+nuget.config
+
+# Documentation build
+docs/_build/
+docs/_site/
+site/
+
+# Backup files
+*.backup
+*.bak
+backup/
+
+# User-specific files
+*.user
+*.userosscache
+*.suo
+
+# Certificates
+*.pfx
+*.cer
+*.key
+*.pem
+
+# Compliance reports (may contain sensitive data)
+Reports/
+ComplianceReport_*.html
+ComplianceReport_*.pdf
+ExecutiveSummary_*.html
+ViolationsReport_*.html
+
+# Monitoring data
+MonitoringData/
+metrics/
+
+# Don't ignore example config
+!config.example.json
+!appsettings.example.json
+
+# Don't ignore test data
+!Tests/TestData/
