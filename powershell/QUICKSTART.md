@@ -5,11 +5,12 @@ Get up and running with CloudScope compliance monitoring in under 10 minutes!
 ## 🚀 Quick Installation
 
 ```powershell
-# Install CloudScope modules from PowerShell Gallery
-Install-Module -Name CloudScope.Compliance, CloudScope.Graph, CloudScope.Monitoring, CloudScope.Reports -Force
+# Clone the repository
+git clone https://github.com/your-org/cloudscope.git
+cd cloudscope/powershell
 
-# Import modules
-Import-Module CloudScope.Compliance, CloudScope.Graph, CloudScope.Monitoring, CloudScope.Reports
+# Run the setup script
+./Setup-CloudScope.ps1
 ```
 
 ## 🔧 Initial Setup
@@ -17,21 +18,24 @@ Import-Module CloudScope.Compliance, CloudScope.Graph, CloudScope.Monitoring, Cl
 ### Step 1: Initialize CloudScope
 
 ```powershell
-# Initialize with your preferred compliance framework
-Initialize-CloudScopeCompliance -Framework GDPR
+# Import the core module
+Import-Module CloudScope.Core
 
-# Connect to Microsoft Graph
-Connect-CloudScopeGraph
+# Initialize CloudScope
+Initialize-CloudScope
+
+# Connect to Microsoft services
+Connect-CloudScopeServices
 ```
 
 ### Step 2: Configure Your Environment
 
 ```powershell
-# Set your Key Vault for encryption (optional but recommended)
-$env:CLOUDSCOPE_KEYVAULT_NAME = "your-keyvault-name"
+# Set your preferred compliance framework
+Set-CloudScopeConfig -Setting "Compliance.DefaultFramework" -Value "GDPR"
 
-# Configure compliance settings for GDPR
-Set-GDPRCompliance -LawfulBasis "Legitimate Interest" -RetentionDays 365
+# Enable monitoring
+Set-CloudScopeConfig -Setting "Monitoring.Enabled" -Value $true
 ```
 
 ## 📊 Basic Compliance Check
@@ -81,10 +85,8 @@ Write-Host "Found $($sensitiveData.TotalLocations) locations with personal data"
 ### Set Up Basic Monitoring
 
 ```powershell
-# Initialize monitoring (requires Azure subscription)
-Initialize-ComplianceMonitoring -WorkspaceName "CloudScope-Monitoring" `
-    -ResourceGroup "rg-compliance" `
-    -CreateIfNotExists
+# Initialize monitoring
+Initialize-ComplianceMonitoring
 
 # Configure alert rules
 Set-AlertingRules -RuleName "ComplianceScore" -Threshold 80 -Operator "LessThan" -Severity "Warning"
@@ -92,6 +94,37 @@ Set-AlertingRules -RuleName "ViolationCount" -Threshold 5 -Operator "GreaterThan
 
 # Start monitoring
 Start-RealtimeMonitoring -IntervalSeconds 300
+```
+
+## 💰 Cost Optimization
+
+### Analyze Cost Impact
+
+```powershell
+# Get compliance cost impact
+$costImpact = Get-ComplianceCostImpact -Framework GDPR
+
+# Get optimization recommendations
+$recommendations = Get-OptimizationRecommendations -IncludeComplianceImpact
+
+# View recommendations
+$recommendations | Format-Table Name, PotentialSavings, ComplianceImpact -AutoSize
+```
+
+## 📊 Visualization
+
+### Create Interactive Visualizations
+
+```powershell
+# Generate compliance mindmap
+New-ComplianceVisualization -Data $assessment -Type MindMap -Path "./compliance-map.html"
+
+# Create interactive dashboard
+New-ComplianceDashboard -Framework GDPR -Interactive
+
+# Visualize CSV data
+$csvPath = "./compliance-data.csv"
+Show-CSVVisualization -Path $csvPath -VisualizationType "BarChart"
 ```
 
 ## 📑 Generate Reports
@@ -117,8 +150,9 @@ param(
 )
 
 # Initialize
-Initialize-CloudScopeCompliance -Framework $Framework
-Connect-CloudScopeGraph
+Import-Module CloudScope.Core
+Initialize-CloudScope
+Connect-CloudScopeServices
 
 # Run checks
 Write-Host "`n🔍 Running daily compliance check for $Framework..." -ForegroundColor Cyan
@@ -146,67 +180,10 @@ Write-Host "New Violations: $($violations.Count)" -ForegroundColor $(if ($violat
 Write-Host "High Risk Users: $($highRiskUsers.Count)" -ForegroundColor $(if ($highRiskUsers.Count -eq 0) { 'Green' } else { 'Yellow' })
 Write-Host "Unclassified Data: $unclassifiedCount items" -ForegroundColor $(if ($unclassifiedCount -eq 0) { 'Green' } else { 'Yellow' })
 
-# Generate report if issues found
+# Generate visualization if issues found
 if ($score -lt 80 -or $violations.Count -gt 0) {
-    New-ComplianceReport -ReportName "Daily-Compliance-Alert" -Framework $Framework -Format HTML
+    New-ComplianceVisualization -Data $assessment -Type "Dashboard" -Path "./compliance-alert.html"
 }
-```
-
-### Automated Remediation
-
-```powershell
-# Auto-remediate common issues
-.\Scripts\Automation\Invoke-ComplianceRemediation.ps1 -RemediationType All -WhatIf
-
-# If results look good, run without WhatIf
-.\Scripts\Automation\Invoke-ComplianceRemediation.ps1 -RemediationType All -Force
-```
-
-### Schedule Weekly Reports
-
-```powershell
-# Schedule automated weekly compliance report
-Schedule-ComplianceReport -ReportName "Weekly Compliance Summary" `
-    -Schedule Weekly `
-    -Recipients @("compliance@company.com", "security@company.com") `
-    -Frameworks @('GDPR', 'PCI_DSS') `
-    -Format PDF
-```
-
-## 🎯 Framework-Specific Quick Starts
-
-### GDPR Compliance
-
-```powershell
-# GDPR-specific setup
-Set-GDPRCompliance -LawfulBasis "Consent" -RetentionDays 365 -EnablePseudonymization
-
-# Check data subject rights
-$assessment = Invoke-ComplianceAssessment -Framework GDPR
-$dsrChecks = $assessment.Results | Where-Object { $_.Check -like "*Data Subject*" }
-$dsrChecks | Format-Table Check, Status -AutoSize
-```
-
-### PCI DSS Compliance
-
-```powershell
-# PCI DSS setup
-Set-PCICompliance -EnablePANMasking -EnableTokenization -KeyRotationDays 90
-
-# Check payment data security
-$paymentData = Get-SensitiveDataLocations -DataType Payment -Scope All
-Write-Host "Payment data locations: $($paymentData.TotalLocations)"
-```
-
-### HIPAA Compliance
-
-```powershell
-# HIPAA setup
-Set-HIPAACompliance -EnableMinimumNecessary -AuditRetentionYears 6
-
-# Check PHI protection
-$phiData = Get-SensitiveDataLocations -DataType Health -Scope All
-$phiData.Locations | Where-Object { $_.RiskLevel -eq 'High' } | Format-Table Path, RiskLevel
 ```
 
 ## 💡 Tips and Best Practices
@@ -216,12 +193,14 @@ $phiData.Locations | Where-Object { $_.RiskLevel -eq 'High' } | Format-Table Pat
 3. **Automate classifications** - Use bulk classification scripts for existing data
 4. **Schedule regular assessments** - Daily quick checks, weekly detailed assessments
 5. **Review high-risk items first** - Focus remediation efforts on critical issues
+6. **Optimize costs** - Use FinOps recommendations to reduce cloud spending while maintaining compliance
+7. **Visualize findings** - Use interactive visualizations to communicate compliance status effectively
 
 ## 🆘 Getting Help
 
 ```powershell
 # Get help for any command
-Get-Help Initialize-CloudScopeCompliance -Full
+Get-Help Initialize-CloudScope -Full
 Get-Help Set-DataClassification -Examples
 
 # List all CloudScope commands
@@ -236,24 +215,24 @@ Get-Module CloudScope.* -ListAvailable | Format-Table Name, Version
 1. **Deep Dive**: Review the [full documentation](../README.md)
 2. **Customize**: Create custom compliance policies for your organization
 3. **Integrate**: Connect CloudScope with your existing security tools
-4. **Automate**: Set up Azure Automation for continuous compliance
-5. **Scale**: Deploy across your entire Microsoft 365 environment
+4. **Automate**: Set up scheduled tasks for continuous compliance
+5. **Visualize**: Create custom dashboards for your compliance needs
 
 ## 🚨 Quick Troubleshooting
 
 ```powershell
 # Connection issues?
 Disconnect-MgGraph
-Connect-CloudScopeGraph -UseDeviceCode
+Connect-CloudScopeServices -DeviceCode
 
 # Module not loading?
-Import-Module CloudScope.Compliance -Force -Verbose
+Import-Module CloudScope.Core -Force -Verbose
 
 # Need to see what's happening?
 $VerbosePreference = 'Continue'
-Initialize-CloudScopeCompliance -Framework GDPR -Verbose
+Initialize-CloudScope -Verbose
 ```
 
 ---
 
-**Ready for more?** Check out our [example scripts](Scripts/Examples/) for advanced scenarios and automation patterns.
+**Ready for more?** Check out our [example scripts](Examples/) for advanced scenarios and automation patterns.
