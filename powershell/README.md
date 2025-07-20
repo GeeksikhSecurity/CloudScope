@@ -33,67 +33,58 @@ CloudScope PowerShell Edition brings comprehensive compliance-as-code capabiliti
 - **Smart Remediation** - Automated fixes for common compliance violations
 - **Rich Reporting** - Executive dashboards, detailed assessments, and Power BI integration
 - **Microsoft Graph Integration** - Deep integration with Microsoft 365 compliance tools
-- **PowerShell DSC** - Desired State Configuration for compliance settings
-- **Azure Automation** - Scalable cloud-based compliance operations
+- **FinOps Integration** - Cost optimization while maintaining compliance
+- **Visual Analysis** - Interactive visualizations without third-party dependencies
 
 ## 🚀 Installation
 
 ### Prerequisites
 - PowerShell 7.0 or later
 - Microsoft 365 Global Administrator or Compliance Administrator role
-- Azure subscription (for monitoring features)
+- Azure subscription (optional, for advanced monitoring features)
 - Windows 10/11, Windows Server 2016+, macOS, or Linux
 
 ### Quick Install (Recommended)
 
 ```powershell
-# Install all CloudScope modules from PowerShell Gallery
-Install-Module -Name CloudScope.Compliance, CloudScope.Graph, CloudScope.Monitoring, CloudScope.Reports -Force
+# Clone the repository
+git clone https://github.com/your-org/cloudscope.git
+cd cloudscope/powershell
 
-# Import modules
-Import-Module CloudScope.Compliance, CloudScope.Graph, CloudScope.Monitoring, CloudScope.Reports
+# Run the setup script
+./Setup-CloudScope.ps1
 ```
 
 ### Manual Installation
 
 ```powershell
-# Clone repository
-git clone https://github.com/your-org/cloudscope.git
-cd cloudscope/powershell
+# Install required modules
+Install-Module -Name Microsoft.Graph -Force
+Install-Module -Name Az.Accounts -Force
 
-# Run deployment script
-.\Scripts\Deployment\Deploy-CloudScope.ps1 -DeploymentType Local
+# Import modules
+Import-Module ./CloudScope/Core/CloudScope.Core.psd1
 ```
-
-### Azure Automation Deployment
-
-```powershell
-# Deploy to Azure Automation
-.\Scripts\Deployment\Deploy-CloudScope.ps1 -DeploymentType AzureAutomation `
-    -ResourceGroup "rg-compliance" `
-    -AutomationAccount "CloudScope-Automation"
-```
-
-For detailed installation instructions, see the [Installation Guide](INSTALL.md).
 
 ## 🎯 Quick Start
 
-### Interactive Mode
-
-Simply run the main CloudScope script for an interactive menu:
+### Initialize CloudScope
 
 ```powershell
-.\CloudScope.ps1
+# Import the core module
+Import-Module CloudScope.Core
+
+# Initialize CloudScope
+Initialize-CloudScope
+
+# Connect to Microsoft services
+Connect-CloudScopeServices
 ```
 
 ### Basic Compliance Check
 
 ```powershell
-# Initialize CloudScope
-Initialize-CloudScopeCompliance -Framework GDPR
-Connect-CloudScopeGraph
-
-# Run compliance assessment
+# Run a compliance assessment
 $assessment = Invoke-ComplianceAssessment -Framework GDPR
 Write-Host "Compliance Score: $($assessment.ComplianceScore)%"
 
@@ -115,28 +106,29 @@ $unclassified = Get-SensitiveDataLocations -DataType Personal -Scope All
 Write-Host "Found $($unclassified.TotalLocations) locations with personal data"
 ```
 
-### Real-time Monitoring
+### Visual Analysis
 
 ```powershell
-# Set up monitoring
-Initialize-ComplianceMonitoring -WorkspaceName "CloudScope-Monitoring" `
-    -ResourceGroup "rg-compliance" -CreateIfNotExists
+# Generate interactive visualization
+New-ComplianceVisualization -Data $assessment -Type MindMap -Path "./compliance-map.html"
 
-# Configure alerts
-Set-AlertingRules -RuleName "ComplianceScore" -Threshold 80 -Operator "LessThan"
-
-# Start monitoring
-Start-RealtimeMonitoring -IntervalSeconds 300
+# Create dashboard
+New-ComplianceDashboard -Framework GDPR -Interactive
 ```
-
-For more examples, see the [Quick Start Guide](QUICKSTART.md).
 
 ## 📦 Module Structure
 
-CloudScope PowerShell consists of four main modules:
+CloudScope PowerShell consists of seven main modules:
+
+### CloudScope.Core
+Core functionality including authentication, configuration, and logging.
+
+```powershell
+Get-Command -Module CloudScope.Core
+```
 
 ### CloudScope.Compliance
-Core compliance functionality including framework implementations, data classification, encryption, and access controls.
+Compliance framework implementations, data classification, encryption, and access controls.
 
 ```powershell
 Get-Command -Module CloudScope.Compliance
@@ -163,6 +155,20 @@ Comprehensive reporting with HTML, PDF, Excel, and Power BI output formats.
 Get-Command -Module CloudScope.Reports
 ```
 
+### CloudScope.FinOps
+Cost optimization while maintaining compliance requirements.
+
+```powershell
+Get-Command -Module CloudScope.FinOps
+```
+
+### CloudScope.Visualization
+Interactive visualizations for compliance data analysis.
+
+```powershell
+Get-Command -Module CloudScope.Visualization
+```
+
 ## 📚 Documentation
 
 ### Guides
@@ -172,17 +178,11 @@ Get-Command -Module CloudScope.Reports
 - [API Reference](docs/API.md) - Complete function reference
 
 ### Examples
-- [GDPR Compliance Check](Scripts/Examples/Example-GDPRComplianceCheck.ps1)
-- [Data Classification](Scripts/Examples/Example-DataClassification.ps1)
-- [Real-time Monitoring](Scripts/Examples/Example-RealtimeMonitoring.ps1)
-
-### Automation
-- [Azure Automation Runbook](Scripts/Automation/Monitor-ComplianceRunbook.ps1)
-- [Automated Remediation](Scripts/Automation/Invoke-ComplianceRemediation.ps1)
-
-### DSC Configurations
-- [GDPR Configuration](Scripts/Configuration/GDPRCompliance.ps1)
-- [PCI DSS Configuration](Scripts/Configuration/PCIDSSCompliance.ps1)
+- [GDPR Compliance Check](Examples/Example-GDPRComplianceCheck.ps1)
+- [Data Classification](Examples/Example-DataClassification.ps1)
+- [Real-time Monitoring](Examples/Example-RealtimeMonitoring.ps1)
+- [Cost Optimization](Examples/Example-CostOptimization.ps1)
+- [Interactive Visualizations](Examples/Example-Visualizations.ps1)
 
 ## 🔧 Configuration
 
@@ -190,22 +190,29 @@ CloudScope uses a JSON configuration file for settings. Create `~/.cloudscope/co
 
 ```json
 {
-  "cloudScope": {
-    "defaultFramework": "GDPR",
-    "environment": "Production"
+  "Version": "1.0.0",
+  "Environment": "Production",
+  "TenantId": "your-tenant-id",
+  "SubscriptionId": "your-subscription-id",
+  "LogLevel": "Information",
+  "Monitoring": {
+    "Enabled": true,
+    "IntervalSeconds": 300
   },
-  "azure": {
-    "tenantId": "your-tenant-id",
-    "subscriptionId": "your-subscription-id"
+  "Compliance": {
+    "DefaultFramework": "GDPR",
+    "EnableAutomaticRemediation": false
   },
-  "monitoring": {
-    "enabled": true,
-    "workspaceName": "CloudScope-LogAnalytics"
+  "FinOps": {
+    "Enabled": true,
+    "BudgetAlerts": true
+  },
+  "Visualization": {
+    "DefaultFormat": "HTML",
+    "EnableInteractive": true
   }
 }
 ```
-
-See [config.template.json](config.template.json) for a complete configuration example.
 
 ## 🧪 Testing
 
@@ -213,21 +220,14 @@ Run the Pester tests to verify your installation:
 
 ```powershell
 # Run all tests
-Invoke-Pester -Path .\Tests
+Invoke-Pester -Path ./CloudScope/*/Tests
 
 # Run specific module tests
-Invoke-Pester -Path .\Tests\CloudScope.Compliance.Tests.ps1
+Invoke-Pester -Path ./CloudScope/Core/Tests
 
 # Run with code coverage
-Invoke-Pester -Path .\Tests -CodeCoverage .\Modules\**\*.psm1
+Invoke-Pester -Path ./CloudScope/*/Tests -CodeCoverage ./CloudScope/*/*.psm1
 ```
-
-## 🚀 CI/CD
-
-CloudScope includes CI/CD pipelines for both Azure DevOps and GitHub Actions:
-
-- [Azure DevOps Pipeline](Pipelines/azure-pipelines.yml)
-- [GitHub Actions Workflow](Pipelines/github-actions.yml)
 
 ## 🤝 Contributing
 
@@ -241,13 +241,13 @@ git clone https://github.com/your-org/cloudscope.git
 cd cloudscope/powershell
 
 # Install development dependencies
-Install-Module -Name Pester, PSScriptAnalyzer, platyPS -Force
+Install-Module -Name Pester, PSScriptAnalyzer -Force
 
 # Run tests
-Invoke-Pester
+Invoke-Pester -Path ./CloudScope/*/Tests
 
 # Run linter
-Invoke-ScriptAnalyzer -Path .\Modules -Recurse
+Invoke-ScriptAnalyzer -Path ./CloudScope -Recurse
 ```
 
 ## 📄 License
@@ -257,31 +257,12 @@ CloudScope PowerShell Edition is licensed under the MIT License. See [LICENSE](L
 ## 🆘 Support
 
 - 📧 Email: support@cloudscope.io
-- 💬 Slack: [CloudScope Community](https://cloudscope.slack.com)
 - 🐛 Issues: [GitHub Issues](https://github.com/your-org/cloudscope/issues)
 - 📖 Docs: [Documentation](https://docs.cloudscope.io)
-
-## 🌟 Acknowledgments
-
-CloudScope PowerShell Edition is built on top of these excellent technologies:
-
-- [PowerShell 7](https://github.com/PowerShell/PowerShell)
-- [Microsoft Graph PowerShell SDK](https://github.com/microsoftgraph/msgraph-sdk-powershell)
-- [Azure PowerShell](https://github.com/Azure/azure-powershell)
-- [Pester](https://github.com/pester/Pester)
-
-## 🚦 Status
-
-![Build Status](https://img.shields.io/github/workflow/status/your-org/cloudscope/CI)
-![Tests](https://img.shields.io/badge/tests-passing-brightgreen)
-![Coverage](https://img.shields.io/badge/coverage-85%25-green)
-![PowerShell Gallery](https://img.shields.io/powershellgallery/v/CloudScope.Compliance)
 
 ---
 
 <div align="center">
-
-**[Website](https://cloudscope.io)** • **[Documentation](https://docs.cloudscope.io)** • **[Blog](https://blog.cloudscope.io)**
 
 Made with ❤️ by the CloudScope Team
 
