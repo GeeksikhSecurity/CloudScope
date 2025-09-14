@@ -51,7 +51,7 @@ jobs:
     
     - name: Upload pip-audit results
       if: steps.check-deps.outputs.has-deps == 'true' && hashFiles('requirements.txt') != ''
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: pip-audit-report
         path: pip-audit-report.json
@@ -93,7 +93,7 @@ jobs:
     
     - name: Upload Trivy scan results to GitHub Security tab
       if: steps.check-docker.outputs.has-dockerfile == 'true'
-      uses: github/codeql-action/upload-sarif@v2
+      uses: github/codeql-action/upload-sarif@v3
       with:
         sarif_file: 'trivy-results.sarif'
     
@@ -119,16 +119,16 @@ jobs:
       uses: actions/checkout@v4
     
     - name: Initialize CodeQL
-      uses: github/codeql-action/init@v2
+      uses: github/codeql-action/init@v3
       with:
         languages: ${{ matrix.language }}
         queries: security-extended,security-and-quality
     
     - name: Autobuild
-      uses: github/codeql-action/autobuild@v2
+      uses: github/codeql-action/autobuild@v3
     
     - name: Perform CodeQL Analysis
-      uses: github/codeql-action/analyze@v2
+      uses: github/codeql-action/analyze@v3
       with:
         category: "/language:${{matrix.language}}"
 
@@ -231,7 +231,7 @@ jobs:
     
     - name: Upload SBOM
       if: steps.check-artifacts.outputs.has-artifacts == 'true'
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: cloudscope-sbom
         path: cloudscope-sbom.spdx.json
@@ -247,7 +247,7 @@ jobs:
     
     - name: Upload vulnerability report
       if: steps.check-artifacts.outputs.has-artifacts == 'true'
-      uses: github/codeql-action/upload-sarif@v2
+      uses: github/codeql-action/upload-sarif@v3
       with:
         sarif_file: results.sarif
     
@@ -263,7 +263,7 @@ jobs:
     
     steps:
     - name: Download all artifacts
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
     
     - name: Generate security summary
       run: |
@@ -285,7 +285,7 @@ jobs:
         cat security-summary.md
     
     - name: Upload security summary
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: security-summary
         path: security-summary.md
