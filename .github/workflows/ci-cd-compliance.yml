@@ -62,7 +62,7 @@ jobs:
           --severity warning
           
     - name: Upload compliance reports
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       if: always()
       with:
         name: compliance-reports
@@ -133,7 +133,7 @@ jobs:
         safety check --json --output safety-report.json || true
         
     - name: Upload security reports
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       if: always()
       with:
         name: security-reports
@@ -181,7 +181,7 @@ jobs:
           --junitxml=test-results.xml
           
     - name: Upload test results
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       if: always()
       with:
         name: test-results-${{ matrix.python-version }}
@@ -238,7 +238,7 @@ jobs:
           --junit-xml=integration-test-results.xml
           
     - name: Upload integration test results
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       if: always()
       with:
         name: integration-test-results
@@ -266,7 +266,7 @@ jobs:
         pip install -e .
         
     - name: Download all artifacts
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
       
     - name: Generate comprehensive compliance report
       run: |
@@ -324,7 +324,7 @@ jobs:
           --output compliance-dashboard.html || true
           
     - name: Upload comprehensive report
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: comprehensive-compliance-report
         path: |
@@ -420,7 +420,7 @@ jobs:
         # Add logic to send report via email/Slack/Teams
         
     - name: Upload nightly scan results
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: nightly-compliance-scan
         path: |
