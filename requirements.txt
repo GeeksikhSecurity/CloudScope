@@ -34,5 +34,5 @@ boto3>=1.28.0  # For AWS integration (optional)
 azure-identity>=1.14.0  # For Azure integration (optional)
 google-cloud-core>=2.3.0  # For GCP integration (optional)
 
-# Kiro workflow dependencies  
-kiro>=0.1.0  # Workflow automation (if available)
+# Kiro workflow dependencies (commented out - not available in public PyPI)
+# kiro>=0.1.0  # Workflow automation (if available)
