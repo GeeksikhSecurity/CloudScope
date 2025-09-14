@@ -11,6 +11,10 @@
   <a href="https://github.com/your-org/cloudscope/releases"><img src="https://img.shields.io/github/v/release/your-org/cloudscope" alt="Release"></a>
 </p>
 
+## 🚧 POC Status
+
+**Note**: This repository represents a proof of concept that was used to develop CloudScope. Some CI/CD security checks may show warnings or failures due to missing components that weren't part of the original POC scope. The security workflow has been configured to gracefully handle these limitations.
+
 ## Overview
 
 CloudScope is a modern, extensible IT asset inventory system designed to discover, track, and manage infrastructure assets across multiple cloud providers and on-premises environments. Built with a plugin-based architecture, it provides comprehensive visibility into your IT landscape while maintaining flexibility and scalability.
