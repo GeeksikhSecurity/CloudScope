@@ -8,7 +8,7 @@ for sensitive data in compliance with various frameworks.
 import os
 import base64
 import hashlib
-from typing import bytes, str, Optional
+from typing import Optional
 from cryptography.fernet import Fernet
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
